@@ -7,70 +7,69 @@ let brushSize = 3;
 let brushRadius = 3;
 let brushColor = {r: 0, g: 0, b: 0};
 
+let history = [];
+let historyIndex = 0;
+
 const easelElement = document.querySelector('#easel');
 const zoomText = document.querySelector('#zoomText');
-const previewCanvas = document.querySelector('#previewCanvas');
 
 const zoomOutButton = document.querySelector('#zoomOutButton');
 const zoomInButton = document.querySelector('#zoomInButton');
 
-const canvas = document.querySelector('#canvas');
-
-//====================================================================================
-
 const drawButton = document.querySelector("#drawButton");
 
-//====================================================================================
-const ctx = canvas.getContext("2d");
-const imgData = ctx.getImageData(0, 0, easelWidth, easelHeight);
+const undoButton = document.querySelector("#undoButton");
+const redoButton = document.querySelector("#redoButton");
 
+const baseCanvas = document.querySelector('#baseCanvas');
+const topCanvas = document.querySelector('#topCanvas');
+const previewCanvas = document.querySelector('#previewCanvas');
+
+const baseCtx = baseCanvas.getContext("2d");
+const topCtx = topCanvas.getContext("2d");
 const previewCtx = previewCanvas.getContext("2d");
-const previewImgData = previewCtx.getImageData(0, 0, easelWidth, easelHeight);
+
+initiate();
+function initiate(){
+    saveDrawingState();
+}
+
+//====================================================================================
+undoButton.addEventListener("click", () => {
+    console.log("undo");
+    historyIndex--;
+    const previousState = history[historyIndex];
+    baseCtx.putImageData(previousState, 0, 0);
+});
+
+redoButton.addEventListener("click", () => {
+    console.log("redo");
+});
+
+
 //====================================================================================
 
-
-
-// canvas.addEventListener("click", () => {
-//     console.log("click canvas"); 
-// });
-
-canvas.addEventListener("mousedown", (e) => {
-    // console.log("mouse down");
+topCanvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
-
-    if(isDrawing){
-        paint(e);
-    }
+    if(isDrawing){paint(e);}
 });
 
-canvas.addEventListener("mouseup", (e) => {
-    // console.log("mouse up");
-    isDrawing = false;
-    console.log("isDrawing: ", isDrawing);
-    updatePreview();
+topCanvas.addEventListener("mouseover", (e) => {
 });
 
-canvas.addEventListener("mouseover", (e) => {
-    // console.log("mouse over");
+topCanvas.addEventListener("mouseout", (e) => {
 });
 
-canvas.addEventListener("mouseout", (e) => {
-    // console.log("mouse out");
-});
-
-canvas.addEventListener("mousemove", (e) => {
-    //console.log("mouse move");
-    if(isDrawing){
-        paint(e);
-        //updatePreview();
-    }
-    
+topCanvas.addEventListener("mousemove", (e) => {
+    if(isDrawing){paint(e);}
 });
 
 document.addEventListener("mouseup", (e) =>{
     if(isDrawing){
         isDrawing = false;
         console.log("isDrawing: ", isDrawing);
+        mergeDownTopCanvas();
+        saveDrawingState();
         updatePreview();
     }
 });
@@ -90,15 +89,28 @@ function paint(e){
     console.log(x, y);
     console.log(x2, y2);
 
-    ctx.fillStyle = `rgb(${brushColor.r}, ${brushColor.g}, ${brushColor.b});`
-    ctx.fillRect(x2, y2, brushSize, brushSize);
+    topCtx.fillStyle = `rgb(${brushColor.r}, ${brushColor.g}, ${brushColor.b});`
+    topCtx.fillRect(x2, y2, brushSize, brushSize);
+}
 
-    
+function mergeDownTopCanvas(){
+    console.log("merge");
+    baseCtx.drawImage(topCanvas, 0, 0);
+    topCtx.clearRect(0, 0, topCanvas.width, topCanvas.height);
+}
+
+function saveDrawingState(){
+    const imageData = baseCtx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
+    history.push(imageData);
+    historyIndex++;
+
+    console.log(historyIndex);
+    console.log(history);
 }
 
 function updatePreview(){
     console.log("update preview");
-    previewCtx.drawImage(canvas, 0, 0);
+    previewCtx.drawImage(baseCanvas, 0, 0);
 }
 
 //====================================================================================

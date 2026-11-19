@@ -193,6 +193,7 @@ hr{
 #easel{
     width: 200px;
     height: 300px;
+    position: relative;
     background: var(--canvas-background);
 }
 
@@ -223,29 +224,46 @@ hr{
     background: url('images/icons.png') no-repeat;
 }
 
-#draw-button{
+#drawButton > .icon{
     background-position-x: 0px;
 }
-#erase-button{
+#eraseButton > .icon{
     background-position-x: -16px;
 }
-#eyedropper-button{
+#sampleButton > .icon{
     background-position-x: -32px;
 }
-#marquee-button{
+#selectButton > .icon{
     background-position-x: -48px;
 }
-#fill-button{
+#fillButton > .icon{
     background-position-x: -64px;
 }
-#swap-color-button{
+#replaceButton > .icon{
     background-position-x: -80px;
 }
 
-#canvas{
+#undoButton > .icon{
+    background-position-x: -96px;
+}
+
+#redoButton > .icon{
+    background-position-x: -112px;
+}
+
+#easel > canvas {
     width: inherit;
     height: inherit;
     image-rendering: pixelated;
+}
+
+#baseCanvas{
+}
+
+#topCanvas{
+    position: absolute;
+    top: 0;
+    left: 0;
     cursor: crosshair;
 }
 
@@ -259,4 +277,8 @@ hr{
     background: var(--canvas-background);
     width: 100px;
     height: 150px; 
+}
+
+.unfinished{
+    opacity: 0.5;
 }
