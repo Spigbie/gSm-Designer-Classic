@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>gSm Designer Classic</title>
+    <link rel='stylesheet' href='main.css'>
+</head>
+<body>
+
+    <main>
+        <div class="designer-main">
+            <div class="wall menu">
+                <section class="window">
+                    <h2>Tools</h2>
+                    <hr>
+                    <div class="tools">
+                        <div class="option"><div class="icon" id="draw-button"></div><span>Draw</span></div>
+                        <div class="option"><div class="icon" id="erase-button"></div><span>Erase</span></div>
+                        <div class="option"><div class="icon" id="eyedropper-button"></div><span>Sample</span></div>
+                        <div class="option"><div class="icon" id="marquee-button"></div><span>Select</span></div>
+                        <div class="option"><div class="icon" id="fill-button"></div><span>Fill</span></div>
+                        <div class="option"><div class="icon" id="swap-color-button"></div><span>Replace</span></div>
+                    </div>
+                    <hr>
+                    <div class="tools">
+                        <div class="option"><div class="icon" id="draw-button"></div><span>undo</span></div>
+                        <div class="option"><div class="icon" id="erase-button"></div><span>redo</span></div>
+                    </div>
+                    <hr>
+                </section>
+                <section class="window">
+                    <h2>Settings</h2>
+                    <hr>
+                </section>
+            </div>
+            <div class="resize-handle"></div>
+
+            <div class="wall main">
+                <div id="easel">
+                    <canvas width="200" height="300px" id="canvas"></canvas>
+                </div>
+                
+            </div>
+
+            <div class="resize-handle"></div>
+            <div class="wall menu">
+                <section class="window">
+                    <h2>Navigation</h2>
+                    <div class="previewContainer"><canvas id="previewCanvas" width="200" height="300"></canvas></div>
+                    <hr>
+                    <div class="zoom-buttons">
+                        <button class="button" id="zoomOutButton">-</button>
+                        <span id="zoomText">1x</span>
+                        <button class="button" id="zoomInButton">+</button>
+                    </div>
+                </section>
+                <section class="window"></section>
+                <section class="window"></section>
+            </div>
+        </div>
+    </main>
+
+    <div class="settings-window hidden">
+        <div class="settings-topbar">
+            <h1>Color picker</h1>
+            <button class="close-button button"><img src="https://cdn.gosupermodel.com/images/buttons/icons_white/cross.png#png8"></button>
+        </div>
+        <div class="settings-content"><p>content content...</p></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

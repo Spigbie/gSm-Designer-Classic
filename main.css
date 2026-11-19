@@ -1,0 +1,262 @@
+:root{
+    --background: grey;
+    --blue-gradient-background: linear-gradient(to bottom, #d7eafc 0%, #a3c2e1 60%, #99bbdc 60%, #80a6cb 100%);
+    --blue-gradient-button: linear-gradient(to bottom, #7aaac8 65%, #4e80a8 65%);
+    --blue-gradient-button-hover: linear-gradient(to bottom, #aacae4 65%, #82aece 65%);
+
+    --sqaure-pattern: repeating-conic-gradient(#ffffff 0 25%, #f0f0f0 0 50%) 0 0 / 16px 16px;
+    --fill: white;
+
+    --canvas-background: var(--fill);
+
+    --border-radius-normal: 10px;
+    --border-radius-small: 4px;
+
+    --padding-wide: 14px;
+    --padding-normal: 7px;
+    --padding-thin: 3px;
+
+    --font-color: white;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+body{
+    background-color: var(--background);
+    width: 100dvw;
+    height: 100dvh;
+}
+
+h1{
+    font-size: 16px;
+    color: var(--font-color);
+    font-weight: normal;
+}
+
+h2{
+    font-size: 14px;
+    color: var(--font-color);
+    font-weight: normal;
+    text-transform: capitalize;
+}
+
+p, span{
+    font-size: 11px;
+    color: var(--font-color);
+}
+.settings-window{
+    width: 482px;
+    border-radius: var(--border-radius-normal);
+    overflow: hidden;
+    position: absolute;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    filter: drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.5));
+}
+
+.zoom-buttons{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.zoom-buttons > .button{
+    width: 28px;
+
+}
+
+.button{
+    padding: 0 var(--padding-normal);
+    height: 23px;
+    border: none;
+    border-radius: var(--border-radius-small);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background: var(--blue-gradient-button);
+    color: var(--font-color);
+    font-weight: bold;
+    font-size: 11px;
+    justify-content: center;
+}
+
+.button:hover{
+    background: var(--blue-gradient-button-hover);
+}
+
+.settings-topbar{
+    position: relative;
+    isolation: isolate;
+    height: 35px;
+    background: var(--blue-gradient-background);
+    padding: var(--padding-normal) var(--padding-wide);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: url("images/Swirls.png") no-repeat right;
+    filter: invert(100%);
+    mix-blend-mode: overlay;
+}
+
+.settings-content{
+    padding: var(--padding-normal);
+    position: relative;
+}
+
+.hidden{
+    visibility: hidden;
+    display: none;
+}
+
+
+main{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.designer-main{
+    width: 100%;
+    height: 100%;
+    padding: var(--padding-normal);
+    display: flex;
+    resize: both;
+    overflow: scroll;
+}
+.wall.menu{
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--padding-normal);
+}
+
+.wall > .window{
+    background-color: rgb(97, 78, 114);
+    padding: var(--padding-normal);
+    display: flex;
+    gap: var(--padding-normal);
+    flex-direction: column;
+}
+
+.wall > .window > h2{
+    text-align: center;
+}
+
+.wall.main{
+    background-color: rgb(46, 46, 46);
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.resize-handle {
+    flex: 0 0 7px;
+    cursor: url(images/col-resize.png) 8 8, auto;
+    background: rgb(255, 255, 255);
+    border-radius: 10px;
+    margin: 0 7px;
+}
+
+.resize-handle:hover {
+    background: #f782d0;
+}
+
+hr{
+    border-top: 1px solid rgba(0, 0, 0, 1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+    border-left: none;
+    border-right: none;
+    mix-blend-mode: overlay;
+}
+
+#easel{
+    width: 200px;
+    height: 300px;
+    background: var(--canvas-background);
+}
+
+.tools{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+}
+
+.option{
+    white-space: nowrap;
+    padding: 4px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--padding-thin);
+    min-width: fit-content;
+    cursor: pointer;
+}
+
+.option:hover{
+    background-color: rgb(97, 78, 114);
+    filter: invert(100%);
+}
+
+.icon{
+    width: 16px;
+    height: 16px;
+    background: url('images/icons.png') no-repeat;
+}
+
+#draw-button{
+    background-position-x: 0px;
+}
+#erase-button{
+    background-position-x: -16px;
+}
+#eyedropper-button{
+    background-position-x: -32px;
+}
+#marquee-button{
+    background-position-x: -48px;
+}
+#fill-button{
+    background-position-x: -64px;
+}
+#swap-color-button{
+    background-position-x: -80px;
+}
+
+#canvas{
+    width: inherit;
+    height: inherit;
+    image-rendering: pixelated;
+    cursor: crosshair;
+}
+
+.previewContainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#previewCanvas{
+    background: var(--canvas-background);
+    width: 100px;
+    height: 150px; 
+}
