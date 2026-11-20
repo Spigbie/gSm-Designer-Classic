@@ -3,12 +3,14 @@ let easelHeight = 300;
 let zoomScale = 1;
 
 let isDrawing = false;
-let brushSize = 3;
+let brushSize = 5;
 let brushRadius = 3;
 let brushColor = {r: 0, g: 0, b: 0};
 
 let history = [];
-let historyIndex = 0;
+let historyIndex = -1;
+
+let action = "none";
 
 const easelElement = document.querySelector('#easel');
 const zoomText = document.querySelector('#zoomText');
@@ -31,27 +33,54 @@ const previewCtx = previewCanvas.getContext("2d");
 
 initiate();
 function initiate(){
-    saveDrawingState();
+    saveDrawingState()
 }
 
 //====================================================================================
+drawButton.addEventListener("click", () => {
+    
+    if(action === "draw"){
+        action = "none";
+        drawButton.classList.remove("selected");
+    }
+    else{
+        action = "draw";
+        drawButton.classList.add("selected");
+    }
+
+});
+
 undoButton.addEventListener("click", () => {
+    if(historyIndex <= 0 ){return;}
     console.log("undo");
     historyIndex--;
+    console.log(historyIndex);
     const previousState = history[historyIndex];
     baseCtx.putImageData(previousState, 0, 0);
 });
 
 redoButton.addEventListener("click", () => {
+    if(historyIndex >= history.length - 1){return;}
     console.log("redo");
+    historyIndex++;
+    console.log(historyIndex);
+    const nextState = history[historyIndex];
+    baseCtx.putImageData(nextState, 0, 0);
 });
 
 
 //====================================================================================
 
 topCanvas.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    if(isDrawing){paint(e);}
+    switch (action) {
+        case "draw":
+            isDrawing = true;
+            if(isDrawing){paint(e);}
+            break;
+    
+        default:
+            break;
+    }
 });
 
 topCanvas.addEventListener("mouseover", (e) => {
@@ -61,22 +90,36 @@ topCanvas.addEventListener("mouseout", (e) => {
 });
 
 topCanvas.addEventListener("mousemove", (e) => {
-    if(isDrawing){paint(e);}
+    switch (action) {
+        case "draw":
+            if(isDrawing){paint(e);}
+            break;
+    
+        default:
+            break;
+    }
 });
 
 document.addEventListener("mouseup", (e) =>{
-    if(isDrawing){
-        isDrawing = false;
-        console.log("isDrawing: ", isDrawing);
-        mergeDownTopCanvas();
-        saveDrawingState();
-        updatePreview();
+    switch (action) {
+        case "draw":
+            if(isDrawing){
+            isDrawing = false;
+            // console.log("isDrawing: ", isDrawing);
+            mergeDownTopCanvas();
+            saveDrawingState();
+            updatePreview();
+        }
+            break;
+    
+        default:
+            break;
     }
 });
 
 //====================================================================================
 function paint(e){
-    console.log("isDrawing: ", isDrawing);
+    // console.log("isDrawing: ", isDrawing);
 
     const rect = e.target.getBoundingClientRect();
 
@@ -86,14 +129,19 @@ function paint(e){
     const x2 = x - Math.floor(brushSize / 2);
     const y2 = y - Math.floor(brushSize / 2);
 
-    console.log(x, y);
-    console.log(x2, y2);
+    // console.log(x, y);
+    // console.log(x2, y2);
 
     topCtx.fillStyle = `rgb(${brushColor.r}, ${brushColor.g}, ${brushColor.b});`
     topCtx.fillRect(x2, y2, brushSize, brushSize);
 }
 
 function mergeDownTopCanvas(){
+
+    if(historyIndex < history.length - 1){
+        history.splice(historyIndex);
+        console.log(history);
+    }
     console.log("merge");
     baseCtx.drawImage(topCanvas, 0, 0);
     topCtx.clearRect(0, 0, topCanvas.width, topCanvas.height);

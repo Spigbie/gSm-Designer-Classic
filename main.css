@@ -7,7 +7,7 @@
     --sqaure-pattern: repeating-conic-gradient(#ffffff 0 25%, #f0f0f0 0 50%) 0 0 / 16px 16px;
     --fill: white;
 
-    --canvas-background: var(--fill);
+    --canvas-background: var(--sqaure-pattern);
 
     --border-radius-normal: 10px;
     --border-radius-small: 4px;
@@ -48,7 +48,7 @@ h2{
     text-transform: capitalize;
 }
 
-p, span{
+p, span, label{
     font-size: 11px;
     color: var(--font-color);
 }
@@ -137,8 +137,8 @@ main{
     height: 100%;
     padding: var(--padding-normal);
     display: flex;
-    resize: both;
-    overflow: scroll;
+    /* resize: both;
+    overflow: scroll; */
 }
 .wall.menu{
     flex: 0 0 200px;
@@ -281,4 +281,24 @@ hr{
 
 .unfinished{
     opacity: 0.5;
+}
+
+.selected{
+    background-color: red;
+}
+
+#brushSizeRange{
+    width: 100%;
+    cursor: pointer;
+}
+
+#brushOpacityRange{
+    width: 100%;
+    cursor: pointer;
+}
+
+#brushShape{
+    width: 32px;
+    height: 32px;
+    background-color: white;
 }

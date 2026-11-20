@@ -15,19 +15,29 @@
                     <h2>Tools</h2>
                     <hr>
                     <div class="tools">
-                        <div class="option unfinished" id="drawButton"><div class="icon"></div><span>Draw</span></div>
+                        <div class="option" id="drawButton"><div class="icon"></div><span>Draw</span></div>
                         <div class="option unfinished" id="eraseButton"><div class="icon"></div><span>Erase</span></div>
                         <div class="option unfinished" id="sampleButton"><div class="icon"></div><span>Sample</span></div>
                         <div class="option unfinished" id="selectButton"><div class="icon"></div><span>Select</span></div>
                         <div class="option unfinished" id="fillButton"><div class="icon"></div><span>Fill</span></div>
                         <div class="option unfinished" id="replaceButton"><div class="icon"></div><span>Replace</span></div>
+                        <div class="option unfinished" id="handButton"><div class="icon"></div><span>Hand</span></div>
                     </div>
                     <hr>
                     <div class="tools">
-                        <div class="option unfinished" id="undoButton"><div class="icon"></div><span>undo</span></div>
-                        <div class="option unfinished" id="redoButton"><div class="icon"></div><span>redo</span></div>
+                        <div class="option" id="undoButton"><div class="icon"></div><span>undo</span></div>
+                        <div class="option" id="redoButton"><div class="icon"></div><span>redo</span></div>
                     </div>
                     <hr>
+                    <div>
+                        <div id="brushShape"></div>
+                        
+                    </div>
+                    <label>Size: <span>5px</span></label>
+                    <input type="range" min="1" max="50" step="1" value="5" id="brushSizeRange">
+
+                    <label>Opacity: <span>100%</span></label>
+                    <input type="range" min="1" max="100" step="1" value="100" id="brushOpacityRange">
                 </section>
                 <section class="window">
                     <h2>Settings</h2>
