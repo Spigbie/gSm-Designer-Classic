@@ -2,15 +2,19 @@ let easelWidth = 200;
 let easelHeight = 300;
 let zoomScale = 1;
 
+const zoomScaleMax = 8 * 2;
+
 let isDrawing = false;
 let brushSize = 5;
 let brushRadius = 3;
-let brushColor = {r: 0, g: 0, b: 0};
+let colorAlpha = 1;
+let brushColor = {r: 0, g: 0, b: 0, a: colorAlpha};
 
 let history = [];
 let historyIndex = -1;
 
 let action = "none";
+
 
 const easelElement = document.querySelector('#easel');
 const zoomText = document.querySelector('#zoomText');
@@ -18,34 +22,202 @@ const zoomText = document.querySelector('#zoomText');
 const zoomOutButton = document.querySelector('#zoomOutButton');
 const zoomInButton = document.querySelector('#zoomInButton');
 
-const drawButton = document.querySelector("#drawButton");
+const brushButton = document.querySelector("#brushButton");
 
 const undoButton = document.querySelector("#undoButton");
 const redoButton = document.querySelector("#redoButton");
 
+const brushSizeRange = document.querySelector("#brushSizeRange");
+const brushSizeText = document.querySelector("#brushSizeText");
+
+const colorAlphaRange = document.querySelector("#colorAlphaRange");
+const colorAlphaText = document.querySelector("#colorAlphaText");
+
 const baseCanvas = document.querySelector('#baseCanvas');
 const topCanvas = document.querySelector('#topCanvas');
 const previewCanvas = document.querySelector('#previewCanvas');
+const brushShapeCanvas = document.querySelector("#brushShapeCanvas");
 
 const baseCtx = baseCanvas.getContext("2d");
 const topCtx = topCanvas.getContext("2d");
 const previewCtx = previewCanvas.getContext("2d");
+const brushShapeCtx = brushShapeCanvas.getContext("2d");
+
+let lastStamp = null;
+
+class Brush {
+    constructor({
+        size = 10,
+        opacity = 1,
+        spacing = 0.2,
+        color = { r: 0, g: 0, b: 0 }
+    } ={}) {
+        this.size = size;
+        this.opacity = opacity;
+        this.spacing = spacing;
+        this.color = color;
+
+        this.canvas = document.createElement("canvas");
+        this.ctx = this.canvas.getContext("2d");
+    }
+
+    draw(ctx, x, y){
+        ctx.save();
+
+        ctx.globalAlpha = this.opacity;
+
+        ctx.drawImage(
+            this.canvas, 
+            x - this.canvas.width / 2,
+            y - this.canvas.height / 2
+        );
+
+        ctx.restore();
+    }
+}
+
+class Pencil extends Brush {
+    constructor({
+        shape = "round", 
+        ...options
+    } = {}){
+        super(options);
+        this.shape = shape;
+        this.update();
+    }
+
+    update(){
+        const size = this.size;
+
+        this.canvas.width = size;
+        this.canvas.height = size;
+
+        const ctx = this.ctx;
+
+        ctx.clearRect(0, 0, size, size);
+
+        ctx.fillStyle = `rgb(
+            ${this.color.r},
+            ${this.color.g},
+            ${this.color.b}
+        )`;
+
+        if (this.shape === "round") {
+            ctx.beginPath();
+            ctx.roundRect(
+                0,
+                0,
+                size,
+                size,
+                size / 2
+            );
+            ctx.fill();
+
+            const imageData = ctx.getImageData(0, 0, size, size);
+            ctx.putImageData(deAntiRasterize(imageData), 0, 0);
+        }
+
+        else if (this.shape === "square") {
+            ctx.fillRect(0, 0, size, size);
+        }
+    }
+}
+
+class PaintBrush extends Brush {
+    constructor({
+        hardness = 0,
+        ...options
+    } = {}) {
+        super(options);
+
+        this.hardness = hardness;
+
+        this.update();
+    }
+
+    update(){
+        const size = this.size;
+
+        this.canvas.width = size;
+        this.canvas.height = size;
+
+        const ctx = this.ctx;
+        const radius = (size / 2);
+
+        ctx.clearRect(0, 0, size, size);
+
+        const gradient = ctx.createRadialGradient(
+            radius, radius, 0, radius, radius, radius
+        );
+
+        const stops = 30;
+        const opaqueEdge = this.hardness; // between 0 and 1
+
+        for (let i = 0; i <= stops; i++) {
+            const stopProgression = i / stops; // between 0 and 1
+            let alpha;
+
+            if (stopProgression <= opaqueEdge) {
+                alpha = 1;
+
+            } else if(stopProgression >= 1){
+                alpha = 0;
+
+            } else {
+                let softProgression = (stopProgression - opaqueEdge) / (1 - opaqueEdge);
+                alpha = 1 - ((3 * softProgression ** 2) - (2 * softProgression ** 3)); // 1 - (3x^2) - (2x^3)
+            }
+
+            gradient.addColorStop(stopProgression, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${alpha})`);
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(
+                0,
+                0,
+                size,
+                size,
+                size / 2
+            );
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+    }
+}
+
+const brushes = [
+    new PaintBrush({size: 10, hardness: 0, opacity: 1}),
+    new PaintBrush({size: 10, hardness: 1, opacity: 1}),
+    new Pencil({size: 10, shape: "round", opacity: 1}),
+    new Pencil({size: 10, shape: "square", opacity: 1}),
+];
+const currentBrush = brushes[0];
+console.log(currentBrush);
 
 initiate();
 function initiate(){
     saveDrawingState()
 }
 
+function deAntiRasterize(imageData){
+
+    for(let i = 3; i < imageData.data.length; i += 4){
+        imageData.data[i] = (imageData.data[i] > 127) ? 255 : 0;
+    }
+
+    return imageData;
+}
+
 //====================================================================================
-drawButton.addEventListener("click", () => {
+brushButton.addEventListener("click", () => {
     
     if(action === "draw"){
         action = "none";
-        drawButton.classList.remove("selected");
+        brushButton.classList.remove("selected");
     }
     else{
         action = "draw";
-        drawButton.classList.add("selected");
+        brushButton.classList.add("selected");
     }
 
 });
@@ -54,28 +226,40 @@ undoButton.addEventListener("click", () => {
     if(historyIndex <= 0 ){return;}
     console.log("undo");
     historyIndex--;
-    console.log(historyIndex);
+    // console.log(historyIndex);
     const previousState = history[historyIndex];
     baseCtx.putImageData(previousState, 0, 0);
+    updatePreview(historyIndex);
 });
 
 redoButton.addEventListener("click", () => {
     if(historyIndex >= history.length - 1){return;}
     console.log("redo");
     historyIndex++;
-    console.log(historyIndex);
+    // console.log(historyIndex);
     const nextState = history[historyIndex];
     baseCtx.putImageData(nextState, 0, 0);
+    updatePreview(nextState);
+});
+//====================================================================================
+brushSizeRange.addEventListener("input", () => {
+    brushSize = brushSizeRange.value;
+    brushSizeText.textContent = brushSizeRange.value;
 });
 
+//====================================================================================
 
+colorAlphaRange.addEventListener("input", () => {
+    colorAlpha = colorAlphaRange.value / 100;
+    colorAlphaText.textContent = colorAlphaRange.value;
+});
 //====================================================================================
 
 topCanvas.addEventListener("mousedown", (e) => {
     switch (action) {
         case "draw":
             isDrawing = true;
-            if(isDrawing){paint(e);}
+            if(isDrawing){startDrawing(e);}
             break;
     
         default:
@@ -92,7 +276,7 @@ topCanvas.addEventListener("mouseout", (e) => {
 topCanvas.addEventListener("mousemove", (e) => {
     switch (action) {
         case "draw":
-            if(isDrawing){paint(e);}
+            if(isDrawing){startDrawing(e);}
             break;
     
         default:
@@ -104,7 +288,7 @@ document.addEventListener("mouseup", (e) =>{
     switch (action) {
         case "draw":
             if(isDrawing){
-            isDrawing = false;
+            stopDrawing();
             // console.log("isDrawing: ", isDrawing);
             mergeDownTopCanvas();
             saveDrawingState();
@@ -120,27 +304,46 @@ document.addEventListener("mouseup", (e) =>{
 //====================================================================================
 function paint(e){
     // console.log("isDrawing: ", isDrawing);
+    const brushSize = currentBrush.size;
+    const spacing = currentBrush.spacing;
 
     const rect = e.target.getBoundingClientRect();
 
-    const x = Math.floor((e.clientX - rect.left) / zoomScale); //x position within the element.
-    const y = Math.floor((e.clientY - rect.top) / zoomScale);  //y position within the element.
+    const x = (e.clientX - rect.left) / zoomScale; //x position within the element.
+    const y = (e.clientY - rect.top) / zoomScale;  //y position within the element.
 
-    const x2 = x - Math.floor(brushSize / 2);
-    const y2 = y - Math.floor(brushSize / 2);
+    if(!lastStamp){
+        lastStamp = {x, y};
+        currentBrush.draw(topCtx, x, y);
+        return;
+    }
 
-    // console.log(x, y);
-    // console.log(x2, y2);
+    const distanceX = x - lastStamp.x;
+    const distanceY = y - lastStamp.y;
 
-    topCtx.fillStyle = `rgb(${brushColor.r}, ${brushColor.g}, ${brushColor.b});`
-    topCtx.fillRect(x2, y2, brushSize, brushSize);
+    const distance = Math.hypot(distanceX, distanceY);
+
+    if(distance < brushSize * spacing){return;};
+    currentBrush.draw(topCtx, x, y);
+    lastStamp = {x, y};
+}
+
+function startDrawing(e) {
+    lastPoint = null;
+    isDrawing = true;
+    paint(e);
+}
+
+function stopDrawing() {
+    lastPoint = null;
+    isDrawing = false;
 }
 
 function mergeDownTopCanvas(){
 
     if(historyIndex < history.length - 1){
         history.splice(historyIndex);
-        console.log(history);
+        // console.log(history);
     }
     console.log("merge");
     baseCtx.drawImage(topCanvas, 0, 0);
@@ -152,42 +355,35 @@ function saveDrawingState(){
     history.push(imageData);
     historyIndex++;
 
-    console.log(historyIndex);
-    console.log(history);
+    // console.log(historyIndex);
+    // console.log(history);
 }
 
-function updatePreview(){
+function updatePreview(imageData){
     console.log("update preview");
     previewCtx.drawImage(baseCanvas, 0, 0);
+    // previewCtx.putImageData(nextState, 0, 0);
 }
 
 //====================================================================================
 zoomOutButton.addEventListener("click", () =>{
     if(zoomScale <= 1){return;}
-    zoomScale = clamp(zoomScale - 1, 1, 5);  
-
+    zoomScale = clamp(zoomScale / 2, 1, zoomScaleMax);  
     scaleEasel();
 });
 
 zoomInButton.addEventListener("click", () =>{
-    if(zoomScale >= 5){return;}
-    zoomScale = clamp(zoomScale + 1, 1, 5);     
+    if(zoomScale >= zoomScaleMax){return;}
+    zoomScale = clamp(zoomScale * 2, 1, zoomScaleMax);     
     scaleEasel();
 });
 
 function scaleEasel(){
-    console.log(zoomScale);
-    console.log("zoom in");
-
     const newEaselWidth = easelWidth * zoomScale;
     const newEaselHeight = easelHeight * zoomScale;
-
     zoomText.textContent = `${zoomScale}x`; 
-
     easelElement.style.width = `${newEaselWidth}px`;
     easelElement.style.height = `${newEaselHeight}px`;
-
-
 }
 
 //====================================================================================

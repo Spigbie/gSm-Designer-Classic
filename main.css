@@ -172,7 +172,7 @@ main{
 
 .resize-handle {
     flex: 0 0 7px;
-    cursor: url(images/col-resize.png) 8 8, auto;
+    cursor: url("images/col-resize.png") 16 16, auto;
     background: rgb(255, 255, 255);
     border-radius: 10px;
     margin: 0 7px;
@@ -195,6 +195,7 @@ hr{
     height: 300px;
     position: relative;
     background: var(--canvas-background);
+    filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 1));
 }
 
 .tools{
@@ -224,31 +225,36 @@ hr{
     background: url('images/icons.png') no-repeat;
 }
 
-#drawButton > .icon{
+#brushButton > .icon{
     background-position-x: 0px;
 }
-#eraseButton > .icon{
+
+#penButton > .icon{
     background-position-x: -16px;
 }
-#sampleButton > .icon{
+
+#eraseButton > .icon{
     background-position-x: -32px;
 }
-#selectButton > .icon{
+#sampleButton > .icon{
     background-position-x: -48px;
 }
-#fillButton > .icon{
+#selectButton > .icon{
     background-position-x: -64px;
 }
-#replaceButton > .icon{
+#fillButton > .icon{
     background-position-x: -80px;
 }
-
-#undoButton > .icon{
+#replaceButton > .icon{
     background-position-x: -96px;
 }
 
-#redoButton > .icon{
+#undoButton > .icon{
     background-position-x: -112px;
+}
+
+#redoButton > .icon{
+    background-position-x: -128px;
 }
 
 #easel > canvas {
@@ -297,8 +303,30 @@ hr{
     cursor: pointer;
 }
 
-#brushShape{
+#brushShapeCanvas{
+    width: 50px;
+    height: 50px;
+    background-color: white;
+}
+
+.window-group{
+    display: flex;
+    gap: var(--padding-thin);
+    flex-direction: column;
+}
+
+#brushPresets{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    justify-content: start;
+    gap: var(--padding-normal);
+}
+
+.brush-container{
     width: 32px;
     height: 32px;
     background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
