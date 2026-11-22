@@ -1,13 +1,27 @@
 :root{
-    --retro-color-background: rgb(60, 148, 248);
-    --retro-easel-wall-background: rgb(65, 111, 209);
-    --retro-color-window: rgb(65, 111, 209);
-    --retro-border-radius: 2px;
+    --retro-color-background: rgb(56, 126, 208);
+    --retro-easel-wall-background: rgb(34, 110, 192);
+    --retro-color-window: rgb(34, 110, 192);
+    --retro-border-radius: 1px;
     /* --retro-border: 3px solid #aecfeb; */
-    --retro-title-background: rgb(255, 47, 71);
-    --retro-title-box-shadow: 0px 0px 1px 2px rgb(0, 74, 139), 0px 0px 1px 3px rgb(255, 116, 122) inset;
+    --retro-title-background: rgb(230, 28, 40);
+    --retro-title-box-shadow: 
+        0px 0px 1px 2px rgb(11, 90, 160), 
+        0px 0px 0px 1px rgb(138, 24, 30) inset,
+        0px 0px 0px 2px rgb(160, 39, 45) inset,
+        0px 0px 0px 3px rgb(255, 105, 112) inset,
+        0px 0px 0px 4px rgb(255, 77, 86) inset;
+
     --retro-title-padding: 5px;
-    --retro-box-shadow: 0px 0px 1px 2px rgb(0, 74, 139), 0px 0px 1px 3px rgb(77, 169, 250) inset;
+
+    --retro-box-shadow: 
+        0px 0px 2px 2px rgb(0, 74, 139), 
+        0px 0px 0px 1px rgb(30, 99, 173) inset, 
+        0px 0px 0px 2px rgb(91, 163, 236) inset,
+        0px 0px 0px 3px rgb(68, 146, 224) inset,
+        0px 0px 0px 4px rgb(37, 118, 199) inset;
+
+    --retro-title-font-size: 11px;
 
 
 
@@ -34,12 +48,30 @@
     --title-padding: var(--retro-title-padding);
     --box-shadow: var(--retro-box-shadow);
     --title-box-shadow: var(--retro-title-box-shadow);
+    --title-font-size: var(--retro-title-font-size);
 
-    --blue-gradient-background: linear-gradient(to bottom, #d7eafc 0%, #a3c2e1 60%, #99bbdc 60%, #80a6cb 100%);
-    --blue-gradient-button: linear-gradient(to bottom, #7aaac8 65%, #4e80a8 65%);
-    --blue-gradient-button-hover: linear-gradient(to bottom, #aacae4 65%, #82aece 65%);
+    --blue-gradient-background: linear-gradient(
+        to bottom, 
+        #d7eafc 0%, 
+        #a3c2e1 60%, 
+        #99bbdc 60%, 
+        #80a6cb 100%);
 
-    --sqaure-pattern: repeating-conic-gradient(#ffffff 0 25%, #f0f0f0 0 50%) 0 0 / 50px 50px;
+    --blue-gradient-button: linear-gradient(
+        to bottom, 
+        #7aaac8 65%, 
+        #4e80a8 65%);
+
+    --blue-gradient-button-hover: linear-gradient(
+        to bottom, 
+        #aacae4 65%, 
+        #82aece 65%);
+
+    --sqaure-pattern: repeating-conic-gradient(
+        #ffffff 0 25%, 
+        #f0f0f0 0 50%) 
+        0 0 / 50px 50px;
+
     --fill: rgb(123, 123, 123);
 
     --canvas-background: var(--sqaure-pattern);
@@ -78,7 +110,7 @@ h1{
 }
 
 h2{
-    font-size: 14px;
+    font-size: var(--title-font-size);
     color: var(--font-color);
     font-weight: normal;
     text-transform: capitalize;
@@ -205,14 +237,26 @@ main{
 
 .wall.main{
     background-color: var(--retro-easel-wall-background);
-    flex: 1;
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     overflow: auto;
     border-radius: var(--window-border-radius);
     box-shadow: var(--box-shadow);
+    display: grid;
+    width: 100%;
+    align-items: center;
+    justify-items: center;
+}
+
+#easel{
+    width: 200px;
+    height: 300px;
+    position: relative;
+    background: var(--canvas-background);
+    filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.5));
+    overflow: hidden;
+    border-radius: var(--window-border-radius);
+    box-sizing: content-box;
+    border: 1px outset white;
+    margin: 100px;
 }
 
 .resize-handle {
@@ -235,15 +279,6 @@ hr{
     mix-blend-mode: overlay;
 }
 
-#easel{
-    width: 200px;
-    height: 300px;
-    position: relative;
-    background: var(--canvas-background);
-    filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.5));
-    overflow: hidden;
-    border-radius: var(--window-border-radius);
-}
 
 .tools{
     display: grid;
@@ -272,7 +307,7 @@ hr{
     background: url('images/icons.png') no-repeat;
 }
 
-#brushButton > .icon{
+#drawButton > .icon{
     background-position-x: 0px;
 }
 
@@ -328,12 +363,15 @@ hr{
     filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.5));
     overflow: hidden;
     border-radius: var(--window-border-radius);
+    
 }
 
 #previewCanvas{
     background: var(--canvas-background);
-    width: 200px;
-    height: 300px; 
+    width: 100px;
+    height: 150px; 
+    border: 1px outset white;
+    box-sizing: content-box;
 }
 
 .unfinished{
@@ -341,7 +379,7 @@ hr{
 }
 
 .selected{
-    background-color: red;
+    background-color: rgb(255, 157, 0);
 }
 
 input[type=range]{
@@ -410,4 +448,10 @@ footer{
     justify-content: center;
     text-align: center;
     bottom: 0;
+    user-select: none;
+    pointer-events: none;
+}
+
+footer > p {
+    font-size: 8px;
 }
