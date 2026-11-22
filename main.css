@@ -3,37 +3,34 @@
     --retro-easel-wall-background: rgb(34, 110, 192);
     --retro-color-window: rgb(34, 110, 192);
     --retro-border-radius: 1px;
-    /* --retro-border: 3px solid #aecfeb; */
     --retro-title-background: rgb(230, 28, 40);
+    --retro-title-padding: 5px;
+    --retro-title-font-size: 11px;
+    --retro-box-shadow: 
+        0px 0px 2px 2px rgb(0, 74, 139), 
+        0px 0px 0px 1px rgb(25, 94, 168) inset, 
+        0px 0px 0px 2px rgb(36, 113, 196) inset, 
+        0px 0px 0px 3px rgb(91, 163, 236) inset,
+        0px 0px 0px 4px rgb(57, 137, 216) inset,
+        0px 0px 0px 5px rgb(37, 118, 199) inset;
     --retro-title-box-shadow: 
         0px 0px 1px 2px rgb(11, 90, 160), 
         0px 0px 0px 1px rgb(138, 24, 30) inset,
-        0px 0px 0px 2px rgb(160, 39, 45) inset,
-        0px 0px 0px 3px rgb(255, 105, 112) inset,
-        0px 0px 0px 4px rgb(255, 77, 86) inset;
-
-    --retro-title-padding: 5px;
-
-    --retro-box-shadow: 
-        0px 0px 2px 2px rgb(0, 74, 139), 
-        0px 0px 0px 1px rgb(30, 99, 173) inset, 
-        0px 0px 0px 2px rgb(91, 163, 236) inset,
-        0px 0px 0px 3px rgb(68, 146, 224) inset,
-        0px 0px 0px 4px rgb(37, 118, 199) inset;
-
-    --retro-title-font-size: 11px;
+        0px 0px 0px 2px rgb(196, 31, 39) inset,
+        0px 0px 0px 3px rgb(250, 90, 98) inset,
+        0px 0px 0px 4px rgb(241, 67, 76) inset,
+        0px 0px 0px 5px rgb(233, 48, 57) inset;
 
 
-
-    --clasic-color-background: rgb(151, 104, 175);
-    --clasic-easel-wall-background: rgb(52, 52, 52);
-    --clasic-color-window: rgb(90, 45, 112);
-    --clasic-border-radius: 0px;
-    --clasic-border: none;
-    --clasic-title-background: none;
-    --clasic-title-border: none;
-    --clasic-title-padding: none;
-    --clasic-box-shadow: none;
+    --classic-color-background: rgb(151, 104, 175);
+    --classic-easel-wall-background: rgb(52, 52, 52);
+    --classic-color-window: rgb(90, 45, 112);
+    --classic-border-radius: 0px;
+    --classic-border: none;
+    --classic-title-background: none;
+    --classic-title-border: none;
+    --classic-title-padding: none;
+    --classic-box-shadow: none;
     
 
 
@@ -215,6 +212,7 @@ main{
     flex-direction: column;
     justify-content: flex-start;
     gap: var(--padding-normal);
+    box-sizing: content-box;
 }
 
 .wall > .window{

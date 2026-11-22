@@ -52,22 +52,19 @@
                         <input type="range" min="1" max="100" step="1" value="5" id="brushSizeRange">
                     </div>
 
-                    <div class="window-group unfinished">
-                        <label>Hardness: <span>100</span>%</label>
-                        <input type="range" min="0" max="100" step="1" value="100" id="brushHardnessRange">
+                    <div class="window-group">
+                        <label>Opacity: <span id="brushOpacityText">100</span>%</label>
+                        <input type="range" min="1" max="100" step="1" value="100" id="brushOpacityRange">
                     </div>
 
-                    <div class="window-group unfinished">
-                        <label>Roundness: <span>100</span>%</label>
-                        <input type="range" min="0" max="100" step="1" value="100" id="brusRoundnessRange">
+                    <div class="window-group">
+                        <label>Hardness: <span id="brushHarnessText">100</span>%</label>
+                        <input type="range" min="0" max="100" step="1" value="100" id="brushHardnessRange">
                     </div>
-                    <div class="window-group unfinished">
-                        <label>Opacity: <span id="opacityText">100</span>%</label>
-                        <input type="range" min="1" max="100" step="1" value="100" id="opacityRange">
-                    </div>
-                    <div class="window-group unfinished">
-                        <label>Spacing: <span id="opacityText">20</span>%</label>
-                        <input type="range" min="0" max="100" step="1" value="20" id="spacingRange">
+                    
+                    <div class="window-group">
+                        <label>Spacing: <span id="brushSpacingText">20</span>%</label>
+                        <input type="range" min="0" max="200" step="1" value="20" id="brushSpacingRange">
                     </div>
                 </section>
 
@@ -75,15 +72,15 @@
                     <h2>Color</h2>
                     <hr>
                     <div id="colorPreview"></div>
-                    <div class="window-group unfinished">
+                    <div class="window-group">
                         <label>Red: <span id="redText">255</span></label>
-                        <input type="range" min="0" max="255" step="1" value="255" id="redRange">
+                        <input type="range" min="0" max="255" step="1" value="0" id="redRange">
                     </div>
-                    <div class="window-group unfinished">
+                    <div class="window-group">
                         <label>Green: <span id="greenText">0</span></label>
                         <input type="range" min="0" max="255" step="1" value="0" id="greenRange">
                     </div>
-                    <div class="window-group unfinished">
+                    <div class="window-group">
                         <label>Blue: <span id="blueText">0</span></label>
                         <input type="range" min="0" max="255" step="1" value="0" id="blueRange">
                     </div>
@@ -94,7 +91,18 @@
                 <section class="window">
                     <h2>Background</h2>
                     <hr>
-                    <span>background</span>
+                    <div class="window-group unfinished">
+                        <div>
+                            <input name="background" id="backgroundFillRadio" type="radio">
+                            <label for="backgroundFillRadio">Fill</label>
+                        </div>
+                        
+                        <div>
+                            <input name="background" id="backgroundCheckerRadio" type="radio" checked>
+                            <label for="backgroundCheckerRadio">Checker</label>
+                        </div>
+                    </div>
+                    
                 </section>
 
             </div>

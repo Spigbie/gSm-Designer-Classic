@@ -47,12 +47,22 @@ const blueText = document.querySelector("#blueText");
 const colorPreview = document.querySelector("#colorPreview");
 
 
-// Easel
-const easelElement = document.querySelector('#easel');
-const baseCanvas = document.querySelector('#baseCanvas');
-const topCanvas = document.querySelector('#topCanvas');
-const baseCtx = baseCanvas.getContext("2d");
-const topCtx = topCanvas.getContext("2d");
+// Brush Window
+const brushShapeCanvas = document.querySelector("#brushShapeCanvas");
+const brushShapeCtx = brushShapeCanvas.getContext("2d");
+
+const brushSizeRange = document.querySelector("#brushSizeRange");
+const brushOpacityRange = document.querySelector("#brushOpacityRange");
+const brushHardnessRange = document.querySelector("#brushHardnessRange");
+const brushSpacingRange = document.querySelector("#brushSpacingRange");
+
+const brushSizeText = document.querySelector("#brushSizeText");
+const brushOpacityText = document.querySelector("#brushOpacityText");
+const brushHardnessText = document.querySelector("#brushHardnessText");
+const brushSpacingText = document.querySelector("#brushSpacingText");
+
+
+// Background Window
 
 
 // Navigation window
@@ -63,13 +73,12 @@ const zoomText = document.querySelector('#zoomText');
 const previewCtx = previewCanvas.getContext("2d");
 
 
-// Brush Window
-const opacityRange = document.querySelector("#opacityRange");
-const opacityText = document.querySelector("#opacityText");
-const brushShapeCanvas = document.querySelector("#brushShapeCanvas");
-const brushShapeCtx = brushShapeCanvas.getContext("2d");
-const brushSizeRange = document.querySelector("#brushSizeRange");
-const brushSizeText = document.querySelector("#brushSizeText");
+// Easel
+const easelElement = document.querySelector('#easel');
+const baseCanvas = document.querySelector('#baseCanvas');
+const topCanvas = document.querySelector('#topCanvas');
+const baseCtx = baseCanvas.getContext("2d");
+const topCtx = topCanvas.getContext("2d");
 
 
 
@@ -81,7 +90,7 @@ class Brush {
     constructor({
         size = 10,
         opacity = 1,
-        spacing = 1,
+        spacing = 0.2,
         color = { r: 0, g: 0, b: 0 }
     } ={}) {
         this.size = size;
@@ -227,8 +236,8 @@ class PaintBrush extends Brush {
 
 
 const brushes = [
-    new PaintBrush({size: 10, hardness: 0, opacity: 1}),
-    new PaintBrush({size: 10, hardness: 1, opacity: 1}),
+    new PaintBrush({size: 10, hardness: 0, spacing: 0.2, opacity: 1}),
+    new PaintBrush({size: 10, hardness: 1, spacing: 0.2, opacity: 1}),
     new Pencil({size: 10, shape: "round", spacing: 0, opacity: 1}),
     new Pencil({size: 10, shape: "square", spacing: 0, opacity: 1}),
 ];
@@ -278,11 +287,24 @@ brushSizeRange.addEventListener("input", () => {
     brushSizeText.textContent = brushSizeRange.value;
 });
 
-
-opacityRange.addEventListener("input", () => {
-    opacity = opacityRange.value / 100;
-    opacityText.textContent = opacityRange.value;
+brushOpacityRange.addEventListener("input", () => {
+    currentBrush.opacity = brushOpacityRange.value / 100;
+    brushOpacityText.textContent = brushOpacityRange.value;
 });
+
+brushHardnessRange.addEventListener("input", () => {
+    currentBrush.hardness = brushHardnessRange.value / 100;
+    currentBrush.update();
+    brushHardnessText.textContent = brushHardnessRange.value;
+});
+
+brushSpacingRange.addEventListener("input", () => {
+    currentBrush.spacing = brushSpacingRange.value / 100;
+    currentBrush.update();
+    brushSpacingText.textContent = brushSpacingRange.value;
+});
+
+
 
 
 // Color Window Event Listeners
@@ -353,7 +375,7 @@ window.addEventListener("mouseup", (e) => {
 
 window.addEventListener("mousemove", (e) => {
     if(!recordMousePos){return};
-    getGlobalMouseCordinates(e);
+    // getGlobalMouseCordinates(e);
 });
 
 
@@ -373,16 +395,15 @@ document.addEventListener("mouseup", (e) =>{
     switch (action) {
         case "draw":
             if(isDrawing){
-            stopDrawing();
-            // console.log("isDrawing: ", isDrawing);
-            mergeDownTopCanvas();
-            saveDrawingState();
-            updatePreview();
-        }
+                stopDrawing();
+                // console.log("isDrawing: ", isDrawing);
+                mergeDownTopCanvas();
+                saveDrawingState();
+                updatePreview();
+            }
             break;
     
-        default:
-            break;
+        default: break;
     }
 });
 
@@ -395,8 +416,8 @@ document.addEventListener("mouseup", (e) =>{
 function initiate(){
     brushSizeRange.value = brushSize;
     brushSizeText.textContent = brushSize;
-    opacityRange.value = opacity * 100;
-    opacityText.textContent = opacity * 100;
+    brushOpacityRange.value = opacity * 100;
+    brushOpacityText.textContent = opacity * 100;
 
     saveDrawingState();
     loadBrushes(brushes);
@@ -429,10 +450,28 @@ function loadBrushes(brushes){
 
         div.addEventListener("click", () => {
             currentBrush = brush;
+            updateBrushSettings();
         });
     });
 }
 
+function updateBrushSettings(){
+    const brushType = currentBrush.constructor.name;
+
+    brushSizeRange.value = currentBrush.size;
+    brushSizeText.textContent = currentBrush.size;
+
+    brushOpacityRange.value = currentBrush.opacity * 100;
+    brushOpacityText.textContent = currentBrush.opacity * 100;
+
+    brushSpacingRange.value = currentBrush.spacing * 100;
+    brushSpacingText.textContent = currentBrush.spacing * 100;
+
+    if(brushType == "PaintBrush"){
+        brushHardnessRange.value = currentBrush.hardness * 100;
+        brushHardnessText.textContent = currentBrush.hardness * 100;
+    }
+}
 
 function getGlobalMouseCordinates(e){
     const x = e.clientX;
@@ -440,7 +479,6 @@ function getGlobalMouseCordinates(e){
     console.log(e.clientX, e.clientY);
     return {x, y};
 }
-
 
 
 function paint(e){
