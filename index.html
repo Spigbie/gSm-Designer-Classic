@@ -27,7 +27,6 @@
                         <div class="option" id="undoButton"><div class="icon"></div><span>undo</span></div>
                         <div class="option" id="redoButton"><div class="icon"></div><span>redo</span></div>
                     </div>
-                    <hr>
                 </section>
 
                 <section class="window">
@@ -38,7 +37,6 @@
                         <div id="brushPresets">
                         </div>
                     </div>
-                    <hr>
                 </section>
 
                 <section class="window">
@@ -51,7 +49,7 @@
 
                     <div class="window-group">
                         <label>Size: <span id="brushSizeText">5</span>px</label>
-                        <input type="range" min="1" max="50" step="1" value="5" id="brushSizeRange">
+                        <input type="range" min="1" max="100" step="1" value="5" id="brushSizeRange">
                     </div>
 
                     <div class="window-group unfinished">
@@ -63,14 +61,31 @@
                         <label>Roundness: <span>100</span>%</label>
                         <input type="range" min="0" max="100" step="1" value="100" id="brusRoundnessRange">
                     </div>
+                    <div class="window-group unfinished">
+                        <label>Opacity: <span id="opacityText">100</span>%</label>
+                        <input type="range" min="1" max="100" step="1" value="100" id="opacityRange">
+                    </div>
+                    <div class="window-group unfinished">
+                        <label>Spacing: <span id="opacityText">20</span>%</label>
+                        <input type="range" min="0" max="100" step="1" value="20" id="spacingRange">
+                    </div>
                 </section>
 
                 <section class="window">
                     <h2>Color</h2>
                     <hr>
+                    <div id="colorPreview"></div>
                     <div class="window-group unfinished">
-                        <label>Opacity: <span id="colorAlphaText">100</span>%</label>
-                        <input type="range" min="1" max="100" step="1" value="100" id="colorAlphaRange">
+                        <label>Red: <span id="redText">255</span></label>
+                        <input type="range" min="0" max="255" step="1" value="255" id="redRange">
+                    </div>
+                    <div class="window-group unfinished">
+                        <label>Green: <span id="greenText">0</span></label>
+                        <input type="range" min="0" max="255" step="1" value="0" id="greenRange">
+                    </div>
+                    <div class="window-group unfinished">
+                        <label>Blue: <span id="blueText">0</span></label>
+                        <input type="range" min="0" max="255" step="1" value="0" id="blueRange">
                     </div>
                    
                 </section>
@@ -82,14 +97,6 @@
                     <span>background</span>
                 </section>
 
-                <section class="window">
-                    <h2>Settings</h2>
-                    <hr>
-                    <span>advanced settings</span>
-                    <span>new brush tool</span>
-                    <span>layered transparancy</span>
-                    <span>Layers</span>
-                </section>
             </div>
             <div class="resize-handle"></div>
 
@@ -114,11 +121,27 @@
                         <button class="button" id="zoomInButton">+</button>
                     </div>
                 </section>
-                <section class="window"></section>
-                <section class="window"></section>
+                <section class="window">
+                    <h2>Settings</h2>
+                    <hr>
+                    <div class="window-group unfinished">
+                        <label>Theme:</label>
+                        <select>
+                            <option>2.0</option>
+                            <option>Classic</option>
+                            <option selected>Retro</option>
+                        </select>
+                    </div>
+                    <div class="window-group align-row unfinished">
+                        <label>Advanced tools:</label>
+                        <input type="checkbox" checked>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
+
+    <footer><p>Assets borrowed from goSupermodel.com | All rights reserved</p></footer>
 
     <div class="settings-window hidden">
         <div class="settings-topbar">
@@ -128,5 +151,6 @@
         <div class="settings-content"><p>content content...</p></div>
     </div>
     <script src="script.js"></script>
+    <script src="styleManager.js"></script>
 </body>
 </html>

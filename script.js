@@ -5,15 +5,46 @@ let zoomScale = 1;
 const zoomScaleMax = 8 * 2;
 
 let isDrawing = false;
-let brushSize = 5;
-let brushRadius = 3;
-let colorAlpha = 1;
-let brushColor = {r: 0, g: 0, b: 0, a: colorAlpha};
+
+let brushSize = 10;
+let opacity = 1;
+let color = {r: 0, g: 0, b: 0, a: 255};
 
 let history = [];
 let historyIndex = -1;
 
 let action = "none";
+
+const redRange = document.querySelector("#redRange");
+const greenRange = document.querySelector("#greenRange");
+const blueRange = document.querySelector("#blueRange");
+
+const redText = document.querySelector("#redText");
+const greenText = document.querySelector("#greenText");
+const blueText = document.querySelector("#blueText");
+
+const colorPreview = document.querySelector("#colorPreview");
+
+function updateColorPreview(){
+    colorPreview.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
+    currentBrush.update();
+}
+
+redRange.addEventListener("input", () => {
+    redText.textContent = redRange.value;
+    color.r = redRange.value;
+    updateColorPreview();
+});
+greenRange.addEventListener("input", () => {
+    greenText.textContent = greenRange.value;
+    color.g = greenRange.value;
+    updateColorPreview();
+});
+blueRange.addEventListener("input", () => {
+    blueText.textContent = blueRange.value;
+    color.b = blueRange.value;
+    updateColorPreview();
+});
 
 
 const easelElement = document.querySelector('#easel');
@@ -30,8 +61,8 @@ const redoButton = document.querySelector("#redoButton");
 const brushSizeRange = document.querySelector("#brushSizeRange");
 const brushSizeText = document.querySelector("#brushSizeText");
 
-const colorAlphaRange = document.querySelector("#colorAlphaRange");
-const colorAlphaText = document.querySelector("#colorAlphaText");
+const opacityRange = document.querySelector("#opacityRange");
+const opacityText = document.querySelector("#opacityText");
 
 const baseCanvas = document.querySelector('#baseCanvas');
 const topCanvas = document.querySelector('#topCanvas');
@@ -97,9 +128,9 @@ class Pencil extends Brush {
         ctx.clearRect(0, 0, size, size);
 
         ctx.fillStyle = `rgb(
-            ${this.color.r},
-            ${this.color.g},
-            ${this.color.b}
+            ${color.r},
+            ${color.g},
+            ${color.b}
         )`;
 
         if (this.shape === "round") {
@@ -120,17 +151,21 @@ class Pencil extends Brush {
         else if (this.shape === "square") {
             ctx.fillRect(0, 0, size, size);
         }
+
+        brushShapeCtx.drawImage(this.canvas, 0, 0);
     }
 }
 
 class PaintBrush extends Brush {
     constructor({
         hardness = 0,
+        flow = 1,
         ...options
     } = {}) {
         super(options);
 
         this.hardness = hardness;
+        this.flow = flow;
 
         this.update();
     }
@@ -168,7 +203,7 @@ class PaintBrush extends Brush {
                 alpha = 1 - ((3 * softProgression ** 2) - (2 * softProgression ** 3)); // 1 - (3x^2) - (2x^3)
             }
 
-            gradient.addColorStop(stopProgression, `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${alpha})`);
+            gradient.addColorStop(stopProgression, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
         }
 
         ctx.beginPath();
@@ -188,15 +223,26 @@ class PaintBrush extends Brush {
 const brushes = [
     new PaintBrush({size: 10, hardness: 0, opacity: 1}),
     new PaintBrush({size: 10, hardness: 1, opacity: 1}),
-    new Pencil({size: 10, shape: "round", opacity: 1}),
-    new Pencil({size: 10, shape: "square", opacity: 1}),
+    new Pencil({size: 10, shape: "round", spacing: 0, opacity: 1}),
+    new Pencil({size: 10, shape: "square", spacing: 0, opacity: 1}),
 ];
-const currentBrush = brushes[0];
+let currentBrush = brushes[0];
 console.log(currentBrush);
 
 initiate();
 function initiate(){
-    saveDrawingState()
+    saveDrawingState();
+    initiateToolSettings();
+    loadBrushes(brushes);
+    updateColorPreview();
+}
+
+function initiateToolSettings(){
+    brushSizeRange.value = brushSize;
+    brushSizeText.textContent = brushSize;
+
+    opacityRange.value = opacity * 100;
+    opacityText.textContent = opacity * 100;
 }
 
 function deAntiRasterize(imageData){
@@ -208,6 +254,28 @@ function deAntiRasterize(imageData){
     return imageData;
 }
 
+function loadBrushes(brushes){
+    const brushPresetsContainer = document.querySelector("#brushPresets");
+    brushes.forEach(brush => {
+        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = 20;
+        canvas.height = 20;
+        const div = document.createElement("div");
+
+        ctx.drawImage(brush.canvas, 0, 0);
+
+        div.appendChild(canvas);
+        brushPresetsContainer.appendChild(div);
+
+        div.addEventListener("click", () => {
+            currentBrush = brush;
+        });
+        
+    });
+}
 //====================================================================================
 brushButton.addEventListener("click", () => {
     
@@ -243,15 +311,16 @@ redoButton.addEventListener("click", () => {
 });
 //====================================================================================
 brushSizeRange.addEventListener("input", () => {
-    brushSize = brushSizeRange.value;
+    currentBrush.size = brushSizeRange.value;
+    currentBrush.update();
     brushSizeText.textContent = brushSizeRange.value;
 });
 
 //====================================================================================
 
-colorAlphaRange.addEventListener("input", () => {
-    colorAlpha = colorAlphaRange.value / 100;
-    colorAlphaText.textContent = colorAlphaRange.value;
+opacityRange.addEventListener("input", () => {
+    opacity = opacityRange.value / 100;
+    opacityText.textContent = opacityRange.value;
 });
 //====================================================================================
 
@@ -306,6 +375,7 @@ function paint(e){
     // console.log("isDrawing: ", isDrawing);
     const brushSize = currentBrush.size;
     const spacing = currentBrush.spacing;
+    const step = Math.max(1, brushSize * spacing);
 
     const rect = e.target.getBoundingClientRect();
 
@@ -320,22 +390,78 @@ function paint(e){
 
     const distanceX = x - lastStamp.x;
     const distanceY = y - lastStamp.y;
-
     const distance = Math.hypot(distanceX, distanceY);
 
-    if(distance < brushSize * spacing){return;};
-    currentBrush.draw(topCtx, x, y);
-    lastStamp = {x, y};
+    if(distance < step){return;}
+
+    const dirX = distanceX / distance;
+    const dirY = distanceY / distance;
+
+
+    const startX = lastStamp.x;
+    const startY = lastStamp.y;
+
+    for (let i = step; i <= distance; i += step) {
+        const newX = startX + dirX * i;
+        const newY = startY + dirY * i;
+        currentBrush.draw(topCtx, newX, newY);
+        
+        // Safe to update lastStamp now because we read from startX/startY
+        lastStamp = { x: newX, y: newY };
+    }
+        
+    
+    // currentBrush.draw(topCtx, x, y);
+    // lastStamp = {x, y};
 }
 
+// function paint(e){
+// const brushSize = currentBrush.size;
+//   const spacing = currentBrush.spacing;
+//   const step = Math.max(1, brushSize * spacing);
+
+//   const rect = e.target.getBoundingClientRect();
+//   const rawX = (e.clientX - rect.left) / zoomScale;
+//   const rawY = (e.clientY - rect.top) / zoomScale;
+
+//   if (!lastStamp) {
+//     lastStamp = { x: rawX, y: rawY };
+//     currentBrush.draw(topCtx, rawX, rawY);
+//     return;
+//   }
+
+//   // Smooth the target point toward the raw cursor (0.1 = very smooth, 0.5 = light smoothing, 1.0 = raw)
+//   const smoothing = 0.4;
+//   const x = lastStamp.x + (rawX - lastStamp.x) * smoothing;
+//   const y = lastStamp.y + (rawY - lastStamp.y) * smoothing;
+
+//   const distanceX = x - lastStamp.x;
+//   const distanceY = y - lastStamp.y;
+//   const distance = Math.hypot(distanceX, distanceY);
+
+//   if (distance < step) return;
+
+//   const dirX = distanceX / distance;
+//   const dirY = distanceY / distance;
+
+//   const startX = lastStamp.x;
+//   const startY = lastStamp.y;
+
+//   for (let i = step; i <= distance; i += step) {
+//     const newX = startX + dirX * i;
+//     const newY = startY + dirY * i;
+//     currentBrush.draw(topCtx, newX, newY);
+//     lastStamp = { x: newX, y: newY };
+//   }
+// }
+
 function startDrawing(e) {
-    lastPoint = null;
     isDrawing = true;
     paint(e);
 }
 
 function stopDrawing() {
-    lastPoint = null;
+    lastStamp = null;
     isDrawing = false;
 }
 
