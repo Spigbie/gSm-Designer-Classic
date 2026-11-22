@@ -2,12 +2,7 @@
 let easelWidth = 200;
 let easelHeight = 300;
 
-// Pen Settings
-
 // Brush Settings
-
-let brushSize = 10;
-let opacity = 1;
 let currentBrush;
 
 // Color Settings
@@ -28,7 +23,6 @@ let historyIndex = -1;
 let action = "none";
 let lastStamp = null;
 let recordMousePos = false;
-
 
 
 // Tool Window
@@ -53,11 +47,13 @@ const brushShapeCtx = brushShapeCanvas.getContext("2d");
 
 const brushSizeRange = document.querySelector("#brushSizeRange");
 const brushOpacityRange = document.querySelector("#brushOpacityRange");
+const brushFlowRange = document.querySelector("#brushFlowRange");
 const brushHardnessRange = document.querySelector("#brushHardnessRange");
 const brushSpacingRange = document.querySelector("#brushSpacingRange");
 
 const brushSizeText = document.querySelector("#brushSizeText");
 const brushOpacityText = document.querySelector("#brushOpacityText");
+const brushFlowText = document.querySelector("#brushFlowText");
 const brushHardnessText = document.querySelector("#brushHardnessText");
 const brushSpacingText = document.querySelector("#brushSpacingText");
 
@@ -104,7 +100,11 @@ class Brush {
 
     draw(ctx, x, y){
         ctx.save();
-        ctx.globalAlpha = this.opacity;
+
+        if (this.constructor.name === "PaintBrush") {
+            ctx.globalAlpha = this.flow;           
+        }
+
         ctx.drawImage(
             this.canvas, 
             x - this.canvas.width / 2,
@@ -236,8 +236,8 @@ class PaintBrush extends Brush {
 
 
 const brushes = [
-    new PaintBrush({size: 10, hardness: 0, spacing: 0.2, opacity: 1}),
-    new PaintBrush({size: 10, hardness: 1, spacing: 0.2, opacity: 1}),
+    new PaintBrush({size: 10, hardness: 0, spacing: 0.2, opacity: 1, flow: 1}),
+    new PaintBrush({size: 10, hardness: 1, spacing: 0.2, opacity: 1, flow: 1}),
     new Pencil({size: 10, shape: "round", spacing: 0, opacity: 1}),
     new Pencil({size: 10, shape: "square", spacing: 0, opacity: 1}),
 ];
@@ -289,7 +289,15 @@ brushSizeRange.addEventListener("input", () => {
 
 brushOpacityRange.addEventListener("input", () => {
     currentBrush.opacity = brushOpacityRange.value / 100;
+    topCanvas.style.opacity = currentBrush.opacity;
+    currentBrush.update();
     brushOpacityText.textContent = brushOpacityRange.value;
+});
+
+brushFlowRange.addEventListener("input", () => {
+    currentBrush.flow = brushFlowRange.value / 100;
+    currentBrush.update();
+    brushFlowText.textContent = brushFlowRange.value;
 });
 
 brushHardnessRange.addEventListener("input", () => {
@@ -303,8 +311,6 @@ brushSpacingRange.addEventListener("input", () => {
     currentBrush.update();
     brushSpacingText.textContent = brushSpacingRange.value;
 });
-
-
 
 
 // Color Window Event Listeners
@@ -374,8 +380,6 @@ window.addEventListener("mouseup", (e) => {
 
 
 window.addEventListener("mousemove", (e) => {
-    if(!recordMousePos){return};
-    // getGlobalMouseCordinates(e);
 });
 
 
@@ -414,11 +418,8 @@ document.addEventListener("mouseup", (e) =>{
 
 
 function initiate(){
-    brushSizeRange.value = brushSize;
-    brushSizeText.textContent = brushSize;
-    brushOpacityRange.value = opacity * 100;
-    brushOpacityText.textContent = opacity * 100;
 
+    updateBrushSettings();
     saveDrawingState();
     loadBrushes(brushes);
     updateColorPreview();
@@ -458,6 +459,8 @@ function loadBrushes(brushes){
 function updateBrushSettings(){
     const brushType = currentBrush.constructor.name;
 
+    topCanvas.style.opacity = currentBrush.opacity;
+
     brushSizeRange.value = currentBrush.size;
     brushSizeText.textContent = currentBrush.size;
 
@@ -468,6 +471,9 @@ function updateBrushSettings(){
     brushSpacingText.textContent = currentBrush.spacing * 100;
 
     if(brushType == "PaintBrush"){
+        brushFlowRange.value = currentBrush.flow * 100;
+        brushFlowText.textContent = currentBrush.flow * 100;
+
         brushHardnessRange.value = currentBrush.hardness * 100;
         brushHardnessText.textContent = currentBrush.hardness * 100;
     }
@@ -482,7 +488,6 @@ function getGlobalMouseCordinates(e){
 
 
 function paint(e){
-    // console.log("isDrawing: ", isDrawing);
     const brushSize = currentBrush.size;
     const spacing = currentBrush.spacing;
     const step = Math.max(1, brushSize * spacing);
@@ -539,6 +544,7 @@ function mergeDownTopCanvas(){
         history.splice(historyIndex);
         // console.log(history);
     }
+    baseCtx.globalAlpha = currentBrush.opacity;
     baseCtx.drawImage(topCanvas, 0, 0);
     topCtx.clearRect(0, 0, topCanvas.width, topCanvas.height);
 }

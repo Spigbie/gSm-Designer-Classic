@@ -343,9 +343,6 @@ hr{
     image-rendering: pixelated;
 }
 
-#baseCanvas{
-}
-
 #topCanvas{
     position: absolute;
     top: 0;
