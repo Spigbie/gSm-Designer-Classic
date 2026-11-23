@@ -473,8 +473,15 @@ function updateBrushPreview(brush){
     brush.draw(brushPreviewCtx, startPoint.x, startPoint.y);
     
     for (let i = 0; i <= endPoint.x - startPoint.x; i++){
+
         x = startPoint.x + i;
+        
+
+        // y = (5.33333 * ( i ** 3)) - (8 * (i ** 2)) + (2.66667 * i) + 0.5;
         y = startPoint.y;
+        console.log(i, x, y);
+
+        
 
         if(x - lastX < brush.size * brush.spacing){
             continue;
