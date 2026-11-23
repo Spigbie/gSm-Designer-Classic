@@ -461,19 +461,30 @@ function updateBrushPreview(brush){
 
     const brushRadius = brush.size / 2;
 
-    const startPoint = {x : Math.round(height / 2 - brushRadius), y: Math.round(height / 2 - brushRadius)};
-    const endPoint = {x: Math.round(width - height / 2 - brushRadius), y: Math.round(height / 2 - brushRadius)};
-    
-    console.log(startPoint, endPoint);
+    const startPoint = {x : Math.round(height / 2), y: Math.round(height / 2)};
+    const endPoint = {x: Math.round(width - height / 2), y: Math.round(height / 2)};
     
     const strokeLength = (startPoint);
 
-    // for (let i = 0; ){
-
-    // }
-
     brushPreviewCtx.clearRect(0,0, width, height);
-    brushPreviewCtx.drawImage(brush.canvas, endPoint.x, endPoint.y);
+
+    
+    let lastX = startPoint.x;
+    brush.draw(brushPreviewCtx, startPoint.x, startPoint.y);
+    
+    for (let i = 0; i <= endPoint.x - startPoint.x; i++){
+        x = startPoint.x + i;
+        y = startPoint.y;
+
+        if(x - lastX < brush.size * brush.spacing){
+            continue;
+        }
+        brush.draw(brushPreviewCtx, x, y);
+        lastX = x;
+    }
+
+    
+    // brushPreviewCtx.drawImage(brush.canvas, endPoint.x, endPoint.y);
 }
 
 function loadBrushes(brushes){
