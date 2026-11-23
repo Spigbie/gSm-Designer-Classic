@@ -145,14 +145,33 @@ class Pencil extends Brush {
             ${color.b}
         )`;
 
-        if (this.shape === "round") {
-            ctx.beginPath();
-            ctx.arc(radius, radius, radius, 0, Math.PI * 2);
-            ctx.fill();
+        // if (this.shape === "round") {
+        //     ctx.beginPath();
+        //     ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+        //     ctx.fill();
 
-            const imageData = ctx.getImageData(0, 0, size, size);
-            ctx.putImageData(deAntiAlias(imageData), 0, 0);
-        }
+        //     const imageData = ctx.getImageData(0, 0, size, size);
+        //     ctx.putImageData(deAntiAlias(imageData), 0, 0);
+        // }
+        if (this.shape === "round") {
+            const imgData = ctx.createImageData(size, size);
+            const center = (size - 1) / 2;
+            const radius = size / 2;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                const dist = Math.hypot(x - center, y - center);
+                if (dist <= radius) {
+                    const idx = (y * size + x) * 4;
+                    imgData.data[idx] = color.r;
+                    imgData.data[idx + 1] = color.g;
+                    imgData.data[idx + 2] = color.b;
+                    imgData.data[idx + 3] = 255;
+                }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            }
 
         else if (this.shape === "square") {
             ctx.fillRect(0, 0, size, size);
@@ -177,46 +196,92 @@ class PaintBrush extends Brush {
         this.update();
     }
 
-    update(){
-        const size = this.size;
+    // update(){
+    //     const size = this.size;
 
+    //     this.canvas.width = size;
+    //     this.canvas.height = size;
+
+    //     const ctx = this.ctx;
+    //     const radius = (size / 2);
+
+    //     ctx.clearRect(0, 0, size, size);
+
+    //     const gradient = ctx.createRadialGradient(
+    //         radius, radius, 0, radius, radius, radius
+    //     );
+
+    //     const stops = 30;
+    //     const opaqueEdge = this.hardness; // between 0 and 1
+
+    //     for (let i = 0; i <= stops; i++) {
+    //         const stopProgression = i / stops; // between 0 and 1
+    //         let alpha;
+
+    //         if (stopProgression <= opaqueEdge) {
+    //             alpha = 1;
+
+    //         } else if(stopProgression >= 1){
+    //             alpha = 0;
+
+    //         } else {
+    //             let softProgression = (stopProgression - opaqueEdge) / (1 - opaqueEdge);
+    //             alpha = 1 - ((3 * softProgression ** 2) - (2 * softProgression ** 3)); // 1 - (3x^2) - (2x^3)
+    //         }
+
+    //         gradient.addColorStop(stopProgression, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
+    //     }
+
+    //     ctx.beginPath();
+    //     ctx.arc(radius, radius, radius, 0, Math.PI * 2);
+    //     ctx.fillStyle = gradient;
+    //     ctx.fill();
+    // }
+    update() {
+        const size = Math.max(1, Math.round(Number(this.size)));
         this.canvas.width = size;
         this.canvas.height = size;
 
-        const ctx = this.ctx;
-        const radius = (size / 2);
+        const imgData = this.ctx.createImageData(size, size);
+        const data = imgData.data;
 
-        ctx.clearRect(0, 0, size, size);
+        // (size - 1) / 2 ensures exact symmetry for both even and odd brush sizes
+        const center = (size - 1) / 2;
+        const radius = size / 2;
+        const opaqueEdge = this.hardness; // 0 to 1
 
-        const gradient = ctx.createRadialGradient(
-            radius, radius, 0, radius, radius, radius
-        );
+        for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const dist = Math.hypot(x - center, y - center);
 
-        const stops = 30;
-        const opaqueEdge = this.hardness; // between 0 and 1
+            // Outside the brush circle -> leave transparent
+            if (dist > radius) continue;
 
-        for (let i = 0; i <= stops; i++) {
-            const stopProgression = i / stops; // between 0 and 1
-            let alpha;
+            // Normalized distance from center (0 at center, 1 at outer edge)
+            const normDist = dist / radius;
+            let alpha = 1;
 
-            if (stopProgression <= opaqueEdge) {
-                alpha = 1;
-
-            } else if(stopProgression >= 1){
-                alpha = 0;
-
+            if (normDist > opaqueEdge) {
+            if (opaqueEdge >= 1) {
+                // Hard edge: 1px anti-aliased fringe at the very boundary
+                alpha = clamp(radius - dist, 0, 1);
             } else {
-                let softProgression = (stopProgression - opaqueEdge) / (1 - opaqueEdge);
-                alpha = 1 - ((3 * softProgression ** 2) - (2 * softProgression ** 3)); // 1 - (3x^2) - (2x^3)
+                // Smoothstep falloff between opaqueEdge and 1
+                const softProg = (normDist - opaqueEdge) / (1 - opaqueEdge);
+                alpha = 1 - (3 * softProg ** 2 - 2 * softProg ** 3);
+            }
             }
 
-            gradient.addColorStop(stopProgression, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
+            const idx = (y * size + x) * 4;
+            data[idx] = color.r;
+            data[idx + 1] = color.g;
+            data[idx + 2] = color.b;
+            data[idx + 3] = Math.round(clamp(alpha, 0, 1) * 255);
+        }
         }
 
-        ctx.beginPath();
-        ctx.arc(radius, radius, radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        this.ctx.putImageData(imgData, 0, 0);
+        // this.updatePreviewShape();
     }
 }
 
@@ -615,9 +680,7 @@ function clamp(num, min, max) {
 // Image Processing Functions
 function deAntiAlias(imageData){
     for(let i = 3; i < imageData.data.length; i += 4){
-        const alpha = imageData.data[i]; 
         imageData.data[i] = (imageData.data[i] > 127) ? 255 : 0;
-         console.log(alpha, imageData.data[i]);
     }
     return imageData;
 }
