@@ -42,8 +42,8 @@ const colorPreview = document.querySelector("#colorPreview");
 
 
 // Brush Window
-const brushShapeCanvas = document.querySelector("#brushShapeCanvas");
-const brushShapeCtx = brushShapeCanvas.getContext("2d");
+const brushPreviewCanvas = document.querySelector("#brushPreviewCanvas");
+const brushPreviewCtx = brushPreviewCanvas.getContext("2d");
 
 const brushSizeRange = document.querySelector("#brushSizeRange");
 const brushOpacityRange = document.querySelector("#brushOpacityRange");
@@ -145,14 +145,6 @@ class Pencil extends Brush {
             ${color.b}
         )`;
 
-        // if (this.shape === "round") {
-        //     ctx.beginPath();
-        //     ctx.arc(radius, radius, radius, 0, Math.PI * 2);
-        //     ctx.fill();
-
-        //     const imageData = ctx.getImageData(0, 0, size, size);
-        //     ctx.putImageData(deAntiAlias(imageData), 0, 0);
-        // }
         if (this.shape === "round") {
             const imgData = ctx.createImageData(size, size);
             const center = (size - 1) / 2;
@@ -195,51 +187,12 @@ class PaintBrush extends Brush {
         this.update();
     }
 
-    // update(){
-    //     const size = this.size;
-
-    //     this.canvas.width = size;
-    //     this.canvas.height = size;
-
-    //     const ctx = this.ctx;
-    //     const radius = (size / 2);
-
-    //     ctx.clearRect(0, 0, size, size);
-
-    //     const gradient = ctx.createRadialGradient(
-    //         radius, radius, 0, radius, radius, radius
-    //     );
-
-    //     const stops = 30;
-    //     const opaqueEdge = this.hardness; // between 0 and 1
-
-    //     for (let i = 0; i <= stops; i++) {
-    //         const stopProgression = i / stops; // between 0 and 1
-    //         let alpha;
-
-    //         if (stopProgression <= opaqueEdge) {
-    //             alpha = 1;
-
-    //         } else if(stopProgression >= 1){
-    //             alpha = 0;
-
-    //         } else {
-    //             let softProgression = (stopProgression - opaqueEdge) / (1 - opaqueEdge);
-    //             alpha = 1 - ((3 * softProgression ** 2) - (2 * softProgression ** 3)); // 1 - (3x^2) - (2x^3)
-    //         }
-
-    //         gradient.addColorStop(stopProgression, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
-    //     }
-
-    //     ctx.beginPath();
-    //     ctx.arc(radius, radius, radius, 0, Math.PI * 2);
-    //     ctx.fillStyle = gradient;
-    //     ctx.fill();
-    // }
     update() {
         const size = Math.max(1, Math.round(Number(this.size)));
         this.canvas.width = size;
         this.canvas.height = size;
+
+        this.alphaMap = new Float32Array(size * size); // Store exact 0.0 - 1.0 floats
 
         const imgData = this.ctx.createImageData(size, size);
         const data = imgData.data;
@@ -271,6 +224,9 @@ class PaintBrush extends Brush {
             }
             }
 
+            alpha = clamp(alpha, 0, 1);
+            this.alphaMap[y* size + x] = alpha;
+            
             const idx = (y * size + x) * 4;
             data[idx] = color.r;
             data[idx + 1] = color.g;
@@ -278,6 +234,8 @@ class PaintBrush extends Brush {
             data[idx + 3] = Math.round(clamp(alpha, 0, 1) * 255);
         }
         }
+
+        //showMePixels(imgData);
 
         this.ctx.putImageData(imgData, 0, 0);
         updateBrushPreview(this);
@@ -350,7 +308,7 @@ brushOpacityRange.addEventListener("input", () => {
     currentBrush.opacity = value / 100;
     currentBrush.update();
     topCanvas.style.opacity = value / 100;
-    // brushShapeCanvas.style.opacity = value / 100;
+    // brushPreviewCanvas.style.opacity = value / 100;
 });
 
 brushFlowRange.addEventListener("input", () => {
@@ -480,9 +438,6 @@ document.addEventListener("mouseup", (e) =>{
 
 
 function initiate(){
-    brushShapeCanvas.width = 50;
-    brushShapeCanvas.height = 50;
-
     updateBrushSettings();
     saveDrawingState();
     loadBrushes(brushes);
@@ -498,11 +453,27 @@ function updateColorPreview(){
 }
 
 function updateBrushPreview(brush){
-    previewRadius = brushShapeCanvas.width / 2;
-    brushX = previewRadius - brush.size / 2;
- 
-    brushShapeCtx.clearRect(0,0, brushShapeCanvas.width, brushShapeCanvas.height);
-    brushShapeCtx.drawImage(brush.canvas, brushX, brushX);
+    const width = brushPreviewCanvas.getBoundingClientRect().width;
+    const height = brushPreviewCanvas.getBoundingClientRect().height;
+
+    brushPreviewCanvas.width = width;
+    brushPreviewCanvas.height = height;
+
+    const brushRadius = brush.size / 2;
+
+    const startPoint = {x : Math.round(height / 2 - brushRadius), y: Math.round(height / 2 - brushRadius)};
+    const endPoint = {x: Math.round(width - height / 2 - brushRadius), y: Math.round(height / 2 - brushRadius)};
+    
+    console.log(startPoint, endPoint);
+    
+    const strokeLength = (startPoint);
+
+    // for (let i = 0; ){
+
+    // }
+
+    brushPreviewCtx.clearRect(0,0, width, height);
+    brushPreviewCtx.drawImage(brush.canvas, endPoint.x, endPoint.y);
 }
 
 function loadBrushes(brushes){
@@ -666,6 +637,7 @@ document.querySelectorAll('.resize-handle').forEach(handle => {
         handle.onpointermove = e => {
             panel.style.flexBasis =
             `${Math.min(300, Math.max(100, startWidth + (e.clientX - startX) * direction))}px`;
+            updateBrushPreview(currentBrush);
         };
 
         handle.onpointerup = () => {
@@ -696,6 +668,14 @@ function deAntiAlias(imageData){
         imageData.data[i] = (imageData.data[i] > 127) ? 255 : 0;
     }
     return imageData;
+}
+
+
+// Image Processing Functions
+function showMePixels(imageData){
+    for(let i = 0; i < imageData.data.length; i += 4){
+        console.log(`r: ${imageData.data[i]}, g: ${imageData.data[i + 1]}, b: ${imageData.data[i + 2]}, a: ${imageData.data[i + 3]}`);
+    }
 }
 
 
