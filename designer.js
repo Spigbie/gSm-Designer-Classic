@@ -101,16 +101,18 @@ class Brush {
     draw(ctx, x, y){
         ctx.save();
 
+        let drawX = x - this.canvas.width / 2;
+        let drawY = y - this.canvas.height / 2;
+
         if (this.constructor.name === "PaintBrush") {
             ctx.globalAlpha = this.flow;           
+        } else if (this.constructor.name === "Pencil"){
+            //Pixel snap
+            drawX = Math.round(drawX);
+            drawY = Math.round(drawY);
         }
 
-        ctx.drawImage(
-            this.canvas, 
-            x - this.canvas.width / 2,
-            y - this.canvas.height / 2
-        );
-
+        ctx.drawImage(this.canvas, drawX, drawY);
         ctx.restore();
     }
 }
@@ -133,6 +135,7 @@ class Pencil extends Brush {
         this.canvas.height = size;
 
         const ctx = this.ctx;
+        const radius = (size / 2);
 
         ctx.clearRect(0, 0, size, size);
 
@@ -144,13 +147,7 @@ class Pencil extends Brush {
 
         if (this.shape === "round") {
             ctx.beginPath();
-            ctx.roundRect(
-                0,
-                0,
-                size,
-                size,
-                size / 2
-            );
+            ctx.arc(radius, radius, radius, 0, Math.PI * 2);
             ctx.fill();
 
             const imageData = ctx.getImageData(0, 0, size, size);
@@ -217,13 +214,7 @@ class PaintBrush extends Brush {
         }
 
         ctx.beginPath();
-        ctx.roundRect(
-                0,
-                0,
-                size,
-                size,
-                size / 2
-            );
+        ctx.arc(radius, radius, radius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
     }
@@ -282,34 +273,39 @@ redoButton.addEventListener("click", () => {
 
 // Brush Window Event Listeners
 brushSizeRange.addEventListener("input", () => {
-    currentBrush.size = brushSizeRange.value;
+    const value = Number(brushSizeRange.value);
+    brushSizeText.textContent = value;
+    currentBrush.size = value;
     currentBrush.update();
-    brushSizeText.textContent = brushSizeRange.value;
 });
 
 brushOpacityRange.addEventListener("input", () => {
-    currentBrush.opacity = brushOpacityRange.value / 100;
-    topCanvas.style.opacity = currentBrush.opacity;
+    const value = Number(brushOpacityRange.value);
+    brushOpacityText.textContent = value;
+    currentBrush.opacity = value / 100;
     currentBrush.update();
-    brushOpacityText.textContent = brushOpacityRange.value;
+    topCanvas.style.opacity = value/100;
 });
 
 brushFlowRange.addEventListener("input", () => {
-    currentBrush.flow = brushFlowRange.value / 100;
+    const value = Number(brushFlowRange.value);
+    brushFlowText.textContent = value;
+    currentBrush.flow = value / 100;
     currentBrush.update();
-    brushFlowText.textContent = brushFlowRange.value;
 });
 
 brushHardnessRange.addEventListener("input", () => {
-    currentBrush.hardness = brushHardnessRange.value / 100;
+    const value = Number(brushHardnessRange.value);
+    brushHardnessText.textContent = value;
+    currentBrush.hardness = value / 100;
     currentBrush.update();
-    brushHardnessText.textContent = brushHardnessRange.value;
 });
 
 brushSpacingRange.addEventListener("input", () => {
-    currentBrush.spacing = brushSpacingRange.value / 100;
+    const value = Number(brushSpacingRange.value);
+    brushSpacingText.textContent = value;
+    currentBrush.spacing = value / 100;
     currentBrush.update();
-    brushSpacingText.textContent = brushSpacingRange.value;
 });
 
 
@@ -541,7 +537,7 @@ function stopDrawing() {
 
 function mergeDownTopCanvas(){
     if(historyIndex < history.length - 1){
-        history.splice(historyIndex);
+        history.splice(historyIndex + 1);
         // console.log(history);
     }
     baseCtx.globalAlpha = currentBrush.opacity;
@@ -619,7 +615,9 @@ function clamp(num, min, max) {
 // Image Processing Functions
 function deAntiAlias(imageData){
     for(let i = 3; i < imageData.data.length; i += 4){
+        const alpha = imageData.data[i]; 
         imageData.data[i] = (imageData.data[i] > 127) ? 255 : 0;
+         console.log(alpha, imageData.data[i]);
     }
     return imageData;
 }
