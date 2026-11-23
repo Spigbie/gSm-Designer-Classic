@@ -177,10 +177,9 @@ class Pencil extends Brush {
             ctx.fillRect(0, 0, size, size);
         }
 
-        brushShapeCtx.drawImage(this.canvas, 0, 0);
+        updateBrushPreview(this);
     }
 }
-
 
 class PaintBrush extends Brush {
     constructor({
@@ -281,6 +280,7 @@ class PaintBrush extends Brush {
         }
 
         this.ctx.putImageData(imgData, 0, 0);
+        updateBrushPreview(this);
         // this.updatePreviewShape();
     }
 }
@@ -349,7 +349,8 @@ brushOpacityRange.addEventListener("input", () => {
     brushOpacityText.textContent = value;
     currentBrush.opacity = value / 100;
     currentBrush.update();
-    topCanvas.style.opacity = value/100;
+    topCanvas.style.opacity = value / 100;
+    // brushShapeCanvas.style.opacity = value / 100;
 });
 
 brushFlowRange.addEventListener("input", () => {
@@ -479,11 +480,14 @@ document.addEventListener("mouseup", (e) =>{
 
 
 function initiate(){
+    brushShapeCanvas.width = 50;
+    brushShapeCanvas.height = 50;
 
     updateBrushSettings();
     saveDrawingState();
     loadBrushes(brushes);
     updateColorPreview();
+    updateBrushPreview(currentBrush);
     
     console.log(currentBrush);
 }
@@ -493,6 +497,13 @@ function updateColorPreview(){
     currentBrush.update();
 }
 
+function updateBrushPreview(brush){
+    previewRadius = brushShapeCanvas.width / 2;
+    brushX = previewRadius - brush.size / 2;
+ 
+    brushShapeCtx.clearRect(0,0, brushShapeCanvas.width, brushShapeCanvas.height);
+    brushShapeCtx.drawImage(brush.canvas, brushX, brushX);
+}
 
 function loadBrushes(brushes){
     const brushPresetsContainer = document.querySelector("#brushPresets");
@@ -538,6 +549,8 @@ function updateBrushSettings(){
         brushHardnessRange.value = currentBrush.hardness * 100;
         brushHardnessText.textContent = currentBrush.hardness * 100;
     }
+
+    updateBrushPreview(currentBrush);
 }
 
 function getGlobalMouseCordinates(e){
