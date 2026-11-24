@@ -452,46 +452,51 @@ function updateColorPreview(){
     currentBrush.update();
 }
 
+//render brush stroke preview
 function updateBrushPreview(brush){
-    const width = brushPreviewCanvas.getBoundingClientRect().width;
-    const height = brushPreviewCanvas.getBoundingClientRect().height;
+    const rect = brushPreviewCanvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
 
     brushPreviewCanvas.width = width;
     brushPreviewCanvas.height = height;
-
+    
+    const midpoint = Math.round(height / 2);
     const brushRadius = brush.size / 2;
 
-    const startPoint = {x : Math.round(height / 2), y: Math.round(height / 2)};
-    const endPoint = {x: Math.round(width - height / 2), y: Math.round(height / 2)};
-    
-    const strokeLength = (startPoint);
+    const startPoint = {x : midpoint, y: midpoint};
+    const endPoint = {x: width - midpoint, y: midpoint};
+    const strokeLength = endPoint.x - startPoint.x;
 
-    brushPreviewCtx.clearRect(0,0, width, height);
+    brushPreviewCtx.clearRect(0, 0, width, height);
 
-    
+    if (strokeLength <= 0) return;// in case th space is too small :/
+
     let lastX = startPoint.x;
-    brush.draw(brushPreviewCtx, startPoint.x, startPoint.y);
+    let lastY = startPoint.y;
+    brush.draw(brushPreviewCtx, lastX, lastY);
+
+    const bow = 2;
+    const minSpacing = Math.max(1, brush.size * brush.spacing);
     
-    for (let i = 0; i <= endPoint.x - startPoint.x; i++){
-
-        x = startPoint.x + i;
+    for (let i = 1; i <= strokeLength; i++){
         
+        const x = startPoint.x + i;
+        const t = i / strokeLength;
 
-        // y = (5.33333 * ( i ** 3)) - (8 * (i ** 2)) + (2.66667 * i) + 0.5;
-        y = startPoint.y;
-        console.log(i, x, y);
-
+        const wave  = ((25 / (3 * bow)) * (t ** 3)) 
+                    - ((25 / (2 * bow)) * (t ** 2)) 
+                    + ((25 / (6 * bow)) * t);
         
+        const y = startPoint.y + height * wave;
+        const distance = Math.hypot(x - lastX, y - lastY);
 
-        if(x - lastX < brush.size * brush.spacing){
-            continue;
-        }
+        if(distance < minSpacing) continue;
+
         brush.draw(brushPreviewCtx, x, y);
         lastX = x;
+        lastY = y;
     }
-
-    
-    // brushPreviewCtx.drawImage(brush.canvas, endPoint.x, endPoint.y);
 }
 
 function loadBrushes(brushes){
