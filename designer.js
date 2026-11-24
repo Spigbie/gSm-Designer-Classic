@@ -69,7 +69,8 @@ const zoomText = document.querySelector('#zoomText');
 const previewCtx = previewCanvas.getContext("2d");
 
 
-// Easel
+// Workspace
+const workspaceElement = document.querySelector('#workspace');
 const easelElement = document.querySelector('#easel');
 const baseCanvas = document.querySelector('#baseCanvas');
 const topCanvas = document.querySelector('#topCanvas');
@@ -370,66 +371,28 @@ zoomInButton.addEventListener("click", () =>{
 
 
 // Easel Event Listeners
-topCanvas.addEventListener("mousedown", (e) => {
-    switch (action) {
-        case "draw":
-            isDrawing = true;
-            if(isDrawing){startDrawing(e);}
-            break;
-    
-        default:
-            break;
+workspaceElement.addEventListener("mousedown", (e) => {
+    if(action === "draw"){
+        startDrawing(e);
     }
 });
 
-
-topCanvas.addEventListener("mouseover", (e) => {});
-
-
-topCanvas.addEventListener("mouseout", (e) => {});
-
-
-window.addEventListener("mousedown", (e) => {
-    recordMousePos = true;
+window.addEventListener("mouseup", (e) =>{
+    if(action === "draw" && isDrawing){
+        stopDrawing();
+        mergeDownTopCanvas();
+        saveDrawingState();
+        updatePreview();;
+    }
 });
-
-
-window.addEventListener("mouseup", (e) => {
-    recordMousePos = false;
-});
-
 
 window.addEventListener("mousemove", (e) => {
-});
-
-
-topCanvas.addEventListener("mousemove", (e) => {
-    switch (action) {
-        case "draw":
-            if(isDrawing){startDrawing(e);}
-            break;
-    
-        default:
-            break;
+    if(action === "draw" && isDrawing){
+        paint(e);
     }
 });
 
 
-document.addEventListener("mouseup", (e) =>{
-    switch (action) {
-        case "draw":
-            if(isDrawing){
-                stopDrawing();
-                // console.log("isDrawing: ", isDrawing);
-                mergeDownTopCanvas();
-                saveDrawingState();
-                updatePreview();
-            }
-            break;
-    
-        default: break;
-    }
-});
 
 
 
@@ -560,8 +523,8 @@ function paint(e){
     const spacing = currentBrush.spacing;
     const step = Math.max(1, brushSize * spacing);
 
-    const rect = e.target.getBoundingClientRect();
 
+    const rect = topCanvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) / zoomScale; //x position within the element.
     const y = (e.clientY - rect.top) / zoomScale;  //y position within the element.
 

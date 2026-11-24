@@ -460,3 +460,8 @@ footer{
 footer > p {
     font-size: 8px;
 }
+
+#brushCursor{
+    filter: invert();
+    position: absolute;
+}
