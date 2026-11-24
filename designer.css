@@ -64,14 +64,23 @@
         #aacae4 65%, 
         #82aece 65%);
 
-    --sqaure-pattern: repeating-conic-gradient(
-        #ffffff 0 25%, 
-        #f0f0f0 0 50%) 
-        0 0 / 50px 50px;
 
-    --fill: rgb(123, 123, 123);
 
-    --canvas-background: var(--sqaure-pattern);
+/* Easel Backgrounds */
+    --easel-bg-fill-color: rgb(123, 123, 123);  
+
+    --easel-bg-checker-color1: rgb(255, 255, 255);
+    --easel-bg-checker-color2: rgb(240, 240, 240);
+    --easel-bg-checker-size: 50px;
+    --easel-bg-checker: repeating-conic-gradient(
+        var(--easel-bg-checker-color1) 0 25%, 
+        var(--easel-bg-checker-color2) 0 50%) 
+        0 0 / 
+        var(--easel-bg-checker-size) 
+        var(--easel-bg-checker-size);
+
+    --canvas-background: var(--easel-bg-checker);
+
 
     --border-radius-normal: 10px;
     --border-radius-small: 4px;

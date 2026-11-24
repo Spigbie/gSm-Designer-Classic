@@ -20,12 +20,13 @@ const zoomScaleMax = 8 * 2;
 let isDrawing = false;
 let history = [];
 let historyIndex = -1;
-let action = "none";
+let tool = null;
 let lastStamp = null;
 let recordMousePos = false;
 
 
 // Tool Window
+const toolsContainerElement = document.querySelector("#toolsContainer");
 const drawButton = document.querySelector("#drawButton");
 const undoButton = document.querySelector("#undoButton");
 const redoButton = document.querySelector("#redoButton");
@@ -97,7 +98,12 @@ class Brush {
 
         this.canvas = document.createElement("canvas");
         this.ctx = this.canvas.getContext("2d");
+
+        this.previewCanvas = document.createElement("canvas");
+        this.previewCtx = this.previewCanvas.getContext("2d");
     }
+
+    renderStamp(targetCanvas, targetCtx, stampSize, stampColor){}
 
     draw(ctx, x, y){
         ctx.save();
@@ -116,6 +122,8 @@ class Brush {
         ctx.drawImage(this.canvas, drawX, drawY);
         ctx.restore();
     }
+
+
 }
 
 
@@ -245,7 +253,6 @@ class PaintBrush extends Brush {
 }
 
 
-
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -264,18 +271,22 @@ currentBrush = brushes[0];
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
-
+console.log(toolsContainerElement);
 // Tool Window Event Listeners
-drawButton.addEventListener("click", () => {
-    if(action === "draw"){
-        action = "none";
-        drawButton.classList.remove("selected");
-    }else{
-        action = "draw";
-        drawButton.classList.add("selected");
-    }
-});
+toolsContainerElement.addEventListener("click", (e) => {
+    const button = e.target.closest(".option");
+    const data = button.dataset.tool;
 
+    if(data === undefined || data === "") return;
+
+    for (const child of toolsContainerElement.children){
+        child.classList.remove("selected");
+    }
+
+    button.classList.add("selected");
+    tool = data;
+    console.log(tool)
+});
 
 undoButton.addEventListener("click", () => {
     if(historyIndex <= 0 ){return;}
@@ -372,13 +383,13 @@ zoomInButton.addEventListener("click", () =>{
 
 // Easel Event Listeners
 workspaceElement.addEventListener("mousedown", (e) => {
-    if(action === "draw"){
+    if(tool === "draw"){
         startDrawing(e);
     }
 });
 
 window.addEventListener("mouseup", (e) =>{
-    if(action === "draw" && isDrawing){
+    if(tool === "draw" && isDrawing){
         stopDrawing();
         mergeDownTopCanvas();
         saveDrawingState();
@@ -387,7 +398,7 @@ window.addEventListener("mouseup", (e) =>{
 });
 
 window.addEventListener("mousemove", (e) => {
-    if(action === "draw" && isDrawing){
+    if(tool === "draw" && isDrawing){
         paint(e);
     }
 });
@@ -525,8 +536,8 @@ function paint(e){
 
 
     const rect = topCanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoomScale; //x position within the element.
-    const y = (e.clientY - rect.top) / zoomScale;  //y position within the element.
+    const x = (e.clientX - rect.left) / zoomScale;
+    const y = (e.clientY - rect.top) / zoomScale; 
 
     if(!lastStamp){
         lastStamp = {x, y};
