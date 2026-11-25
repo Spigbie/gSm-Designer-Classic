@@ -17,15 +17,14 @@ const zoomScaleMax = 8 * 2;
 
 
 // Other
-let isDrawing = false;
 let history = [];
 let historyIndex = -1;
-let tool = null;
+let activeTool = null;
 let lastStamp = null;
 let recordMousePos = false;
 
 
-// Tool Window
+// tool Window
 const toolsContainerElement = document.querySelector("#toolsContainer");
 const drawButton = document.querySelector("#drawButton");
 const undoButton = document.querySelector("#undoButton");
@@ -80,6 +79,57 @@ const topCtx = topCanvas.getContext("2d");
 
 
 
+
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+
+
+
+const draw = {
+    active: false,
+
+    start(e){
+        this.active = true;
+        paint(e);
+    },
+
+    stop(){
+        lastStamp = null;
+        this.active = false;
+        mergeDownTopCanvas();
+        saveDrawingState();
+        updatePreview();
+    }, 
+
+    move(e){
+        paint(e);
+    }
+}
+
+const erase = {
+    active: false,
+
+    start(e){
+        this.active = true;
+        console.log("start erasing");
+    },
+
+    stop(){
+        lastStamp = null;
+        this.active = false;
+        
+    },
+
+    move(e){
+
+    }
+}
+
+
+const tools = {
+    draw,
+    erase
+}
+
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -121,6 +171,10 @@ class Brush {
 
         ctx.drawImage(this.canvas, drawX, drawY);
         ctx.restore();
+    }
+
+    erase(ctx, x, y){
+        
     }
 
 
@@ -271,22 +325,20 @@ currentBrush = brushes[0];
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
-console.log(toolsContainerElement);
-// Tool Window Event Listeners
+
+// tool Window Event Listeners
 toolsContainerElement.addEventListener("click", (e) => {
     const button = e.target.closest(".option");
-    const data = button.dataset.tool;
+    const toolName = button.dataset.tool;
 
-    if(data === undefined || data === "") return;
+    if(!toolName || !tools[toolName]) return;
 
-    for (const child of toolsContainerElement.children){
-        child.classList.remove("selected");
-    }
-
+    toolsContainerElement.querySelector(".selected")?.classList.remove("selected");
     button.classList.add("selected");
-    tool = data;
-    console.log(tool)
+
+    activeTool = tools[toolName];
 });
+
 
 undoButton.addEventListener("click", () => {
     if(historyIndex <= 0 ){return;}
@@ -381,29 +433,22 @@ zoomInButton.addEventListener("click", () =>{
 
 
 
-// Easel Event Listeners
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+
+
+
+// Workspace Event Listeners
 workspaceElement.addEventListener("mousedown", (e) => {
-    if(tool === "draw"){
-        startDrawing(e);
-    }
+    activeTool?.start(e);
 });
 
 window.addEventListener("mouseup", (e) =>{
-    if(tool === "draw" && isDrawing){
-        stopDrawing();
-        mergeDownTopCanvas();
-        saveDrawingState();
-        updatePreview();;
-    }
+    activeTool?.stop(e);
 });
 
 window.addEventListener("mousemove", (e) => {
-    if(tool === "draw" && isDrawing){
-        paint(e);
-    }
+    if(activeTool?.active) activeTool?.move(e);
 });
-
-
 
 
 
@@ -566,18 +611,6 @@ function paint(e){
         // Safe to update lastStamp now because we read from startX/startY
         lastStamp = { x: newX, y: newY };
     }
-}
-
-
-function startDrawing(e) {
-    isDrawing = true;
-    paint(e);
-}
-
-
-function stopDrawing() {
-    lastStamp = null;
-    isDrawing = false;
 }
 
 
