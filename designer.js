@@ -44,18 +44,7 @@ const colorPreview = document.querySelector("#colorPreview");
 // Brush Window
 const brushPreviewCanvas = document.querySelector("#brushPreviewCanvas");
 const brushPreviewCtx = brushPreviewCanvas.getContext("2d");
-
-const brushSizeRange = document.querySelector("#brushSizeRange");
-const brushOpacityRange = document.querySelector("#brushOpacityRange");
-const brushFlowRange = document.querySelector("#brushFlowRange");
-const brushHardnessRange = document.querySelector("#brushHardnessRange");
-const brushSpacingRange = document.querySelector("#brushSpacingRange");
-
-const brushSizeText = document.querySelector("#brushSizeText");
-const brushOpacityText = document.querySelector("#brushOpacityText");
-const brushFlowText = document.querySelector("#brushFlowText");
-const brushHardnessText = document.querySelector("#brushHardnessText");
-const brushSpacingText = document.querySelector("#brushSpacingText");
+const brushSettingsContainer = document.querySelector("#brushSettings");
 
 
 // Background Window
@@ -116,19 +105,50 @@ const erase = {
     stop(){
         lastStamp = null;
         this.active = false;
-        
     },
 
-    move(e){
+    move(e){}
+}
 
-    }
+const sample = {
+    active: false,
+    start(e){},
+    stop(){},
+    move(e){}
+}
+
+const select = {
+    active: false,
+    start(e){},
+    stop(){},
+    move(e){}
+}
+
+const fill = {
+    active: false,
+    start(e){},
+    stop(){},
+    move(e){}
+}
+
+const replace = {
+    active: false,
+    start(e){},
+    stop(){},
+    move(e){}
 }
 
 
 const tools = {
     draw,
-    erase
+    erase,
+    sample,
+    select,
+    fill,
+    replace
 }
+
+
 
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
@@ -174,7 +194,6 @@ class Brush {
     }
 
     erase(ctx, x, y){
-        
     }
 
 
@@ -358,43 +377,63 @@ redoButton.addEventListener("click", () => {
 });
 
 
-// Brush Window Event Listeners
-brushSizeRange.addEventListener("input", () => {
-    const value = Number(brushSizeRange.value);
-    brushSizeText.textContent = value;
-    currentBrush.size = value;
+const toPercent = (val) => Math.round(val * 100);
+
+const brushSettings = {
+    size:       {default: 5,    min: 1,     max: 100,   step: 1,    unit: "px"  },
+    hardness:   {default: 1,    min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    spacing:    {default: 0.2,  min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    opacity:    {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    flow:       {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
+}
+
+function renderBrushControls(container){
+    for (const name in brushSettings){
+
+        const setting = brushSettings[name];
+
+        const rangeWrapper = document.createElement("div");
+        rangeWrapper.classList.add("window-group", "range-wrapper");
+
+        const rangeLabel = document.createElement("label");
+        const rawValue = setting.default;
+        const formatValue = brushSettings[name].format? brushSettings[name].format(rawValue): rawValue;
+
+        rangeLabel.innerHTML = `${name}: <span class="range-text">${formatValue}</span>${setting.unit}`;
+
+        const rangeInput = document.createElement("input");
+        rangeInput.type = "range";
+        rangeInput.value = 0.5;
+        rangeInput.min = setting.min;
+        rangeInput.max = setting.max;
+        rangeInput.step = setting.step;
+        rangeInput.dataset.setting = name;
+
+        rangeWrapper.append(rangeLabel, rangeInput);
+        container.appendChild(rangeWrapper);
+    }
+}
+
+brushSettingsContainer.addEventListener("input", (e) =>{
+    const wrapper = e.target.closest(".range-wrapper");
+    if (!wrapper) return;
+
+    const range = wrapper.querySelector("input[type='range']");
+    const rangeText = wrapper.querySelector(".range-text");
+    const settingName = range.dataset.setting;
+
+    if(!settingName || !(settingName in currentBrush)) return;
+
+    const rawValue = Number(range.value);
+
+    const formatValue = brushSettings[settingName].format? brushSettings[settingName].format(rawValue): rawValue;
+
+    rangeText.textContent = formatValue;
+    currentBrush[settingName] = rawValue;
+
     currentBrush.update();
 });
 
-brushOpacityRange.addEventListener("input", () => {
-    const value = Number(brushOpacityRange.value);
-    brushOpacityText.textContent = value;
-    currentBrush.opacity = value / 100;
-    currentBrush.update();
-    topCanvas.style.opacity = value / 100;
-    // brushPreviewCanvas.style.opacity = value / 100;
-});
-
-brushFlowRange.addEventListener("input", () => {
-    const value = Number(brushFlowRange.value);
-    brushFlowText.textContent = value;
-    currentBrush.flow = value / 100;
-    currentBrush.update();
-});
-
-brushHardnessRange.addEventListener("input", () => {
-    const value = Number(brushHardnessRange.value);
-    brushHardnessText.textContent = value;
-    currentBrush.hardness = value / 100;
-    currentBrush.update();
-});
-
-brushSpacingRange.addEventListener("input", () => {
-    const value = Number(brushSpacingRange.value);
-    brushSpacingText.textContent = value;
-    currentBrush.spacing = value / 100;
-    currentBrush.update();
-});
 
 
 // Color Window Event Listeners
@@ -457,6 +496,7 @@ window.addEventListener("mousemove", (e) => {
 
 
 function initiate(){
+    renderBrushControls(brushSettingsContainer);
     updateBrushSettings();
     saveDrawingState();
     loadBrushes(brushes);
@@ -542,26 +582,26 @@ function loadBrushes(brushes){
 }
 
 function updateBrushSettings(){
-    const brushType = currentBrush.constructor.name;
+    // const brushType = currentBrush.constructor.name;
 
-    topCanvas.style.opacity = currentBrush.opacity;
+    // topCanvas.style.opacity = currentBrush.opacity;
 
-    brushSizeRange.value = currentBrush.size;
-    brushSizeText.textContent = currentBrush.size;
+    // brushSizeRange.value = currentBrush.size;
+    // brushSizeText.textContent = currentBrush.size;
 
-    brushOpacityRange.value = currentBrush.opacity * 100;
-    brushOpacityText.textContent = currentBrush.opacity * 100;
+    // brushOpacityRange.value = currentBrush.opacity * 100;
+    // brushOpacityText.textContent = currentBrush.opacity * 100;
 
-    brushSpacingRange.value = currentBrush.spacing * 100;
-    brushSpacingText.textContent = currentBrush.spacing * 100;
+    // brushSpacingRange.value = currentBrush.spacing * 100;
+    // brushSpacingText.textContent = currentBrush.spacing * 100;
 
-    if(brushType == "PaintBrush"){
-        brushFlowRange.value = currentBrush.flow * 100;
-        brushFlowText.textContent = currentBrush.flow * 100;
+    // if(brushType == "PaintBrush"){
+    //     brushFlowRange.value = currentBrush.flow * 100;
+    //     brushFlowText.textContent = currentBrush.flow * 100;
 
-        brushHardnessRange.value = currentBrush.hardness * 100;
-        brushHardnessText.textContent = currentBrush.hardness * 100;
-    }
+    //     brushHardnessRange.value = currentBrush.hardness * 100;
+    //     brushHardnessText.textContent = currentBrush.hardness * 100;
+    // }
 
     updateBrushPreview(currentBrush);
 }

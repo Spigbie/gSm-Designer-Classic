@@ -474,3 +474,7 @@ footer > p {
     filter: invert();
     position: absolute;
 }
+
+.range-wrapper > label {
+    text-transform: capitalize;
+}
