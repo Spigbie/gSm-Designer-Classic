@@ -2,9 +2,6 @@
 let easelWidth = 200;
 let easelHeight = 300;
 
-// Brush Settings
-let currentBrush;
-
 // Color Settings
 let color = {r: 0, g: 0, b: 0, a: 255};
 
@@ -31,19 +28,15 @@ const redoButton = document.querySelector("#redoButton");
 
 
 // Colour Window
-const redRange = document.querySelector("#redRange");
-const greenRange = document.querySelector("#greenRange");
-const blueRange = document.querySelector("#blueRange");
-const redText = document.querySelector("#redText");
-const greenText = document.querySelector("#greenText");
-const blueText = document.querySelector("#blueText");
 const colorPreview = document.querySelector("#colorPreview");
+const colorSettingsContainer = document.querySelector("#colorSettings");
 
 
 // Brush Window
 const brushPreviewCanvas = document.querySelector("#brushPreviewCanvas");
 const brushPreviewCtx = brushPreviewCanvas.getContext("2d");
 const brushSettingsContainer = document.querySelector("#brushSettings");
+const brushTipsContainer = document.querySelector("#brushTipsContainer");
 
 
 // Background Window
@@ -69,7 +62,16 @@ const topCtx = topCanvas.getContext("2d");
 // Math
 const toPercent = (val) => Math.round(val * 100);
 
+const tipImagePaths = [
+    "images/brush tips/tip.png", 
+    "images/brush tips/tip2.png", 
+    "images/brush tips/tip3.png",
+    "images/brush tips/tip4.png"
+];
 
+
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -79,7 +81,7 @@ const draw = {
 
     start(e){
         this.active = true;
-        paint(e);
+        // paint(e);
     },
 
     stop(){
@@ -91,7 +93,7 @@ const draw = {
     }, 
 
     move(e){
-        paint(e);
+        // paint(e);
     }
 }
 
@@ -152,29 +154,196 @@ const tools = {
 
 
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+
+
+
+class CircleTip{
+    constructor({
+        hardness = 0, 
+        pixelSnap = false
+    } = {}){
+        this.hardness = hardness;
+        this.pixelSnap = pixelSnap;
+    }
+
+    render(maskCtx, size){
+        const imgData = maskCtx.createImageData(size, size);
+        const data = imgData.data;
+        const center = (size - 1) / 2;
+        const radius = size / 2;
+
+        for (let y = 0; y < size; y++){for (let x = 0; x < size; x++){
+            
+            const dist = Math.hypot(x - center, y - center);
+            if(dist > radius) continue;
+            let alpha = 1;
+
+            if(!this.pixelSnap){
+                const normDist = dist/radius;
+
+                if(normDist > this.hardness){
+                    if(this.hardness >= 1){
+                        alpha = clamp(radius - dist,  0, 1);
+
+                    } else{
+                        const softProg = (normDist - this.hardness) / (1 - this.hardness);
+                        alpha = 1 - (3 * softProg ** 2 - 2 * softProg ** 3);
+                    }
+                }
+            } 
+
+            const idx = (y * size + x) * 4;
+            imgData.data[idx] = 0;
+            imgData.data[idx + 1] = 0;
+            imgData.data[idx + 2] = 0;
+            imgData.data[idx + 3] = Math.round(alpha * 255);
+
+        }}
+
+        maskCtx.putImageData(imgData, 0, 0);
+    }
+}
+
+function trimCtx(ctx, width, height){
+    const imgdata = ctx.getImageData(0, 0, width, height);
+    const data = imgdata.data;
+
+    let left = width;
+    let top = height;
+    let right = 0;
+    let bottom = 0;
+    let hasPixel = false;
+
+    for(let i = 3; i < data.length; i+=4){
+        if (data[i] > 0){
+            hasPixel = true;
+
+            const pixelIndex = (i - 3) / 4;
+            const x = pixelIndex % width;
+            const y = Math.floor(pixelIndex / width);
+
+            if (x < left) left = x;
+            if (x > right) right = x;
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+        }
+    }
+
+    if (!hasPixels) {
+        return { left: 0, top: 0, width: 0, height: 0 };
+    }
+
+    return {
+        left, 
+        top, 
+        width: (right - left) +1 , 
+        height: (bottom - top) + 1
+    };
+}
+
+class ImageTip{
+    constructor(imageSource){
+        this.image = imageSource;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = this.image.width;
+        canvas.height = this.image.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(this.image, 0, 0);
+
+        this.trimmed = trimCtx(ctx, canvas.width, canvas.height);
+    }
+
+    render(maskCtx, size){
+        const {left, top, width, height} = this.trimmed;
+        if (width === 0 || height === 0) return;
+
+        const scale = Math.min(size / width, size / height);
+        const destWidth = width * scale;
+        const destHeight = height * scale;
+
+        const destX = (size - destWidth) / 2;
+        const destY = (size - destHeight) / 2;
+
+        maskCtx.drawImage(
+            this.image, 
+            left,   top,    width,      height,
+            destX,  destY,  destWidth,  destHeight
+        );
+    }
+}
+
+class SquareTip{
+    constructor(){
+    }
+
+    render(maskCtx, size){
+        maskCtx.beginPath();
+        maskCtx.rect(0, 0, size, size);
+        maskCtx.fillStyle = `rgb(0, 0, 0)`;
+        maskCtx.fill();
+    }
+}
+
+const brushTips = [
+    new CircleTip({hardness:0,      pixelSnap: false}),
+    new CircleTip({hardness:0.25,   pixelSnap: false}),
+    new CircleTip({hardness:0.5,    pixelSnap: false}),
+    new CircleTip({hardness:0.75,   pixelSnap: false}),
+    new CircleTip({hardness:1,      pixelSnap: false}),
+    new CircleTip({hardness:0,      pixelSnap: true}),
+    new CircleTip({hardness:0.25,   pixelSnap: true}),
+    new CircleTip({hardness:0.5,    pixelSnap: true}),
+    new CircleTip({hardness:0.75,   pixelSnap: true}),
+    new CircleTip({hardness:1,      pixelSnap: true}),
+    new SquareTip({}),
+];
+
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
 
 class Brush {
     constructor({
+        name,
+        tip,
+        settings,
         size = 10,
         opacity = 1,
         spacing = 0.2,
-        color = { r: 0, g: 0, b: 0 }
+        flow
+
     } ={}) {
+        this.name = name;
+        this.tip = tip;
+        this.supportedSettings = settings;
+
         this.size = size;
-        this.opacity = opacity;
         this.spacing = spacing;
-        this.color = color;
+        this.opacity = opacity;
+        this.flow = flow;
 
-        this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d");
+        this.maskCanvas = document.createElement("canvas");
+        this.maskCtx = this.maskCanvas.getContext("2d");
+        this.tintCanvas = document.createElement("canvas");
+        this.tintCtx = this.tintCanvas.getContext("2d");
 
-        this.previewCanvas = document.createElement("canvas");
-        this.previewCtx = this.previewCanvas.getContext("2d");
+        this.rebuildMask();
     }
 
-    renderStamp(targetCanvas, targetCtx, stampSize, stampColor){}
+    rebuildMask(){
+        this.maskCanvas.width = this.size;
+        this.maskCanvas.height = this.size;
+        this.maskCtx.clearRect(0, 0, this.size, this.size);
+
+        this.tip.render(this.maskCtx, size);
+        this.tint(r, g, b);
+
+    }
 
     draw(ctx, x, y){
         ctx.save();
@@ -193,140 +362,11 @@ class Brush {
         ctx.drawImage(this.canvas, drawX, drawY);
         ctx.restore();
     }
-
-    erase(ctx, x, y){
-    }
-
-
 }
 
 
-class Pencil extends Brush {
-    constructor({
-        shape = "round", 
-        ...options
-    } = {}){
-        super(options);
-        this.shape = shape;
-        this.update();
-    }
-
-    update(){
-        const size = this.size;
-
-        this.canvas.width = size;
-        this.canvas.height = size;
-
-        const ctx = this.ctx;
-        const radius = (size / 2);
-
-        ctx.clearRect(0, 0, size, size);
-
-        ctx.fillStyle = `rgb(
-            ${color.r},
-            ${color.g},
-            ${color.b}
-        )`;
-
-        if (this.shape === "round") {
-            const imgData = ctx.createImageData(size, size);
-            const center = (size - 1) / 2;
-            const radius = size / 2;
-
-            for (let y = 0; y < size; y++) {
-                for (let x = 0; x < size; x++) {
-                const dist = Math.hypot(x - center, y - center);
-                if (dist <= radius) {
-                    const idx = (y * size + x) * 4;
-                    imgData.data[idx] = color.r;
-                    imgData.data[idx + 1] = color.g;
-                    imgData.data[idx + 2] = color.b;
-                    imgData.data[idx + 3] = 255;
-                }
-                }
-            }
-            ctx.putImageData(imgData, 0, 0);
-            }
-
-        else if (this.shape === "square") {
-            ctx.fillRect(0, 0, size, size);
-        }
-
-        updateBrushPreview(this);
-    }
-}
-
-class PaintBrush extends Brush {
-    constructor({
-        hardness = 0,
-        flow = 1,
-        ...options
-    } = {}) {
-        super(options);
-
-        this.hardness = hardness;
-        this.flow = flow;
-
-        this.update();
-    }
-
-    update() {
-        const size = Math.max(1, Math.round(Number(this.size)));
-        this.canvas.width = size;
-        this.canvas.height = size;
-
-        this.alphaMap = new Float32Array(size * size); // Store exact 0.0 - 1.0 floats
-
-        const imgData = this.ctx.createImageData(size, size);
-        const data = imgData.data;
-
-        // (size - 1) / 2 ensures exact symmetry for both even and odd brush sizes
-        const center = (size - 1) / 2;
-        const radius = size / 2;
-        const opaqueEdge = this.hardness; // 0 to 1
-
-        for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            const dist = Math.hypot(x - center, y - center);
-
-            // Outside the brush circle -> leave transparent
-            if (dist > radius) continue;
-
-            // Normalized distance from center (0 at center, 1 at outer edge)
-            const normDist = dist / radius;
-            let alpha = 1;
-
-            if (normDist > opaqueEdge) {
-            if (opaqueEdge >= 1) {
-                // Hard edge: 1px anti-aliased fringe at the very boundary
-                alpha = clamp(radius - dist, 0, 1);
-            } else {
-                // Smoothstep falloff between opaqueEdge and 1
-                const softProg = (normDist - opaqueEdge) / (1 - opaqueEdge);
-                alpha = 1 - (3 * softProg ** 2 - 2 * softProg ** 3);
-            }
-            }
-
-            alpha = clamp(alpha, 0, 1);
-            this.alphaMap[y* size + x] = alpha;
-            
-            const idx = (y * size + x) * 4;
-            data[idx] = color.r;
-            data[idx + 1] = color.g;
-            data[idx + 2] = color.b;
-            data[idx + 3] = Math.round(clamp(alpha, 0, 1) * 255);
-        }
-        }
-
-        //showMePixels(imgData);
-
-        this.ctx.putImageData(imgData, 0, 0);
-        updateBrushPreview(this);
-        // this.updatePreviewShape();
-    }
-}
-
-
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -340,28 +380,9 @@ const brushSettings = {
 };
 
 
-const brushes = [
-    new PaintBrush({
-        size: brushSettings.size.default, 
-        hardness: brushSettings.hardness.default, 
-        spacing: brushSettings.spacing.default, 
-        opacity: brushSettings.opacity.default, 
-        flow: brushSettings.flow.default
-    }),
-        
-    new Pencil({
-        size: brushSettings.size.default, 
-        shape: "round", 
-        spacing: brushSettings.spacing.default, 
-        opacity: brushSettings.opacity.default
-    }),
-];
 
-
-currentBrush = brushes[0];
-
-
-
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -399,12 +420,126 @@ redoButton.addEventListener("click", () => {
 
 
 
+brushSettingsContainer.addEventListener("input", (e) =>{
+    const wrapper = e.target.closest(".range-wrapper");
+    if (!wrapper) return;
+
+    const range = wrapper.querySelector("input[type='range']");
+    const text = wrapper.querySelector(".range-text");
+    const settingName = range.dataset.setting;
+
+    if(!settingName) return;
+
+    const rawValue = Number(range.value);
+    const formatValue = brushSettings[settingName].format? brushSettings[settingName].format(rawValue): rawValue;
+    text.textContent = formatValue;
+});
+
+
+// Color Settings
+colorSettingsContainer.addEventListener("input", (e) =>{
+    const wrapper = e.target.closest(".color-wrapper");
+    const range = wrapper.querySelector("input[type='range']");
+    const text = wrapper.querySelector(".range-text");
+    const colorName = range.dataset.color;
+
+    text.textContent = range.value;
+    color[colorName] = range.value;
+    updateColorPreview();
+});
+
+
+// Navigation Window Event Listeners
+zoomOutButton.addEventListener("click", () =>{
+    if(zoomScale <= 1){return;}
+    zoomScale = clamp(zoomScale / 2, 1, zoomScaleMax);  
+    scaleEasel();
+});
+
+
+zoomInButton.addEventListener("click", () =>{
+    if(zoomScale >= zoomScaleMax){return;}
+    zoomScale = clamp(zoomScale * 2, 1, zoomScaleMax);     
+    scaleEasel();
+});
+
+
+
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+
+
+
+// Workspace Event Listeners
+workspaceElement.addEventListener("mousedown", (e) => {
+    activeTool?.start(e);
+});
+
+window.addEventListener("mouseup", (e) =>{
+    activeTool?.stop(e);
+});
+
+window.addEventListener("mousemove", (e) => {
+    if(activeTool?.active) activeTool?.move(e);
+});
+
+
+
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+
+
+
+async function initiate(){
+    const loadedImages = await Promise.all(tipImagePaths.map(loadImage));
+
+    for (const img of loadedImages) {
+        brushTips.push(new ImageTip(img));
+    }
+
+    saveDrawingState();
+    renderBrushControls(brushSettingsContainer);
+    updateColorPreview();    
+    displayBrushTips();
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function updateColorPreview(){
+    colorPreview.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
+}
+
+
+function displayBrushTips(){
+    const tipSize = 20;
+    for(const tip of brushTips){
+        const canvas = document.createElement("canvas");
+
+        canvas.width = tipSize;
+        canvas.height = tipSize;
+
+        const ctx = canvas.getContext("2d");
+
+        console.log(tip);
+        tip.render(ctx, tipSize, tipSize);
+
+        brushTipsContainer.appendChild(canvas);
+    } 
+}
 
 function renderBrushControls(container){
     for (const name in brushSettings){
 
         const setting = brushSettings[name];
-        if (!name in currentBrush) continue;
 
         const rangeWrapper = document.createElement("div");
         rangeWrapper.classList.add("window-group", "range-wrapper");
@@ -429,252 +564,12 @@ function renderBrushControls(container){
     }
 }
 
-brushSettingsContainer.addEventListener("input", (e) =>{
-    const wrapper = e.target.closest(".range-wrapper");
-    if (!wrapper) return;
-
-    const range = wrapper.querySelector("input[type='range']");
-    const rangeText = wrapper.querySelector(".range-text");
-    const settingName = range.dataset.setting;
-
-    if(!settingName || !(settingName in currentBrush)) return;
-
-    const rawValue = Number(range.value);
-
-    const formatValue = brushSettings[settingName].format? brushSettings[settingName].format(rawValue): rawValue;
-
-    rangeText.textContent = formatValue;
-    currentBrush[settingName] = rawValue;
-
-    currentBrush.update();
-});
-
-
-
-// Color Window Event Listeners
-redRange.addEventListener("input", () => {
-    redText.textContent = redRange.value;
-    color.r = redRange.value;
-    updateColorPreview();
-});
-
-greenRange.addEventListener("input", () => {
-    greenText.textContent = greenRange.value;
-    color.g = greenRange.value;
-    updateColorPreview();
-});
-
-blueRange.addEventListener("input", () => {
-    blueText.textContent = blueRange.value;
-    color.b = blueRange.value;
-    updateColorPreview();
-});
-
-
-// Navigation Window Event Listeners
-zoomOutButton.addEventListener("click", () =>{
-    if(zoomScale <= 1){return;}
-    zoomScale = clamp(zoomScale / 2, 1, zoomScaleMax);  
-    scaleEasel();
-});
-
-
-zoomInButton.addEventListener("click", () =>{
-    if(zoomScale >= zoomScaleMax){return;}
-    zoomScale = clamp(zoomScale * 2, 1, zoomScaleMax);     
-    scaleEasel();
-});
-
-
-
-// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
-
-
-
-// Workspace Event Listeners
-workspaceElement.addEventListener("mousedown", (e) => {
-    activeTool?.start(e);
-});
-
-window.addEventListener("mouseup", (e) =>{
-    activeTool?.stop(e);
-});
-
-window.addEventListener("mousemove", (e) => {
-    if(activeTool?.active) activeTool?.move(e);
-});
-
-
-
-// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
-
-
-
-function initiate(){
-    renderBrushControls(brushSettingsContainer);
-    updateBrushSettings();
-    saveDrawingState();
-    // loadBrushes(brushes);
-    updateColorPreview();
-    updateBrushPreview(currentBrush);
-    
-    console.log(currentBrush);
-}
-
-function updateColorPreview(){
-    colorPreview.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
-    currentBrush.update();
-}
-
-//render brush stroke preview
-function updateBrushPreview(brush){
-    const rect = brushPreviewCanvas.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
-    brushPreviewCanvas.width = width;
-    brushPreviewCanvas.height = height;
-    
-    const midpoint = Math.round(height / 2);
-    const brushRadius = brush.size / 2;
-
-    const startPoint = {x : midpoint, y: midpoint};
-    const endPoint = {x: width - midpoint, y: midpoint};
-    const strokeLength = endPoint.x - startPoint.x;
-
-    brushPreviewCtx.clearRect(0, 0, width, height);
-
-    if (strokeLength <= 0) return;// in case th space is too small :/
-
-    let lastX = startPoint.x;
-    let lastY = startPoint.y;
-    brush.draw(brushPreviewCtx, lastX, lastY);
-
-    const bow = 2;
-    const minSpacing = Math.max(1, brush.size * brush.spacing);
-    
-    for (let i = 1; i <= strokeLength; i++){
-        
-        const x = startPoint.x + i;
-        const t = i / strokeLength;
-
-        const wave  = ((25 / (3 * bow)) * (t ** 3)) 
-                    - ((25 / (2 * bow)) * (t ** 2)) 
-                    + ((25 / (6 * bow)) * t);
-        
-        const y = startPoint.y + height * wave;
-        const distance = Math.hypot(x - lastX, y - lastY);
-
-        if(distance < minSpacing) continue;
-
-        brush.draw(brushPreviewCtx, x, y);
-        lastX = x;
-        lastY = y;
-    }
-}
-
-function loadBrushes(brushes){
-    const brushPresetsContainer = document.querySelector("#brushPresets");
-    brushes.forEach(brush => {
-        
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = 20;
-        canvas.height = 20;
-        const div = document.createElement("div");
-
-        ctx.drawImage(brush.canvas, 0, 0);
-
-        div.appendChild(canvas);
-        brushPresetsContainer.appendChild(div);
-
-        div.addEventListener("click", () => {
-            currentBrush = brush;
-            updateBrushSettings();
-        });
-    });
-}
-
-function updateBrushSettings(){
-    // const brushType = currentBrush.constructor.name;
-
-    // topCanvas.style.opacity = currentBrush.opacity;
-
-    // brushSizeRange.value = currentBrush.size;
-    // brushSizeText.textContent = currentBrush.size;
-
-    // brushOpacityRange.value = currentBrush.opacity * 100;
-    // brushOpacityText.textContent = currentBrush.opacity * 100;
-
-    // brushSpacingRange.value = currentBrush.spacing * 100;
-    // brushSpacingText.textContent = currentBrush.spacing * 100;
-
-    // if(brushType == "PaintBrush"){
-    //     brushFlowRange.value = currentBrush.flow * 100;
-    //     brushFlowText.textContent = currentBrush.flow * 100;
-
-    //     brushHardnessRange.value = currentBrush.hardness * 100;
-    //     brushHardnessText.textContent = currentBrush.hardness * 100;
-    // }
-
-    updateBrushPreview(currentBrush);
-}
-
-function getGlobalMouseCordinates(e){
-    const x = e.clientX;
-    const y = e.clientY;
-    console.log(e.clientX, e.clientY);
-    return {x, y};
-}
-
-
-function paint(e){
-    const brushSize = currentBrush.size;
-    const spacing = currentBrush.spacing;
-    const step = Math.max(1, brushSize * spacing);
-
-
-    const rect = topCanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoomScale;
-    const y = (e.clientY - rect.top) / zoomScale; 
-
-    if(!lastStamp){
-        lastStamp = {x, y};
-        currentBrush.draw(topCtx, x, y);
-        return;
-    }
-
-    const distanceX = x - lastStamp.x;
-    const distanceY = y - lastStamp.y;
-    const distance = Math.hypot(distanceX, distanceY);
-
-    if(distance < step){return;}
-
-    const dirX = distanceX / distance;
-    const dirY = distanceY / distance;
-
-
-    const startX = lastStamp.x;
-    const startY = lastStamp.y;
-
-    for (let i = step; i <= distance; i += step) {
-        const newX = startX + dirX * i;
-        const newY = startY + dirY * i;
-        currentBrush.draw(topCtx, newX, newY);
-        
-        // Safe to update lastStamp now because we read from startX/startY
-        lastStamp = { x: newX, y: newY };
-    }
-}
-
 
 function mergeDownTopCanvas(){
     if(historyIndex < history.length - 1){
         history.splice(historyIndex + 1);
         // console.log(history);
     }
-    baseCtx.globalAlpha = currentBrush.opacity;
     baseCtx.drawImage(topCanvas, 0, 0);
     topCtx.clearRect(0, 0, topCanvas.width, topCanvas.height);
 }
@@ -695,6 +590,8 @@ function updatePreview(imageData){
 
 
 
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -722,7 +619,6 @@ document.querySelectorAll('.resize-handle').forEach(handle => {
         handle.onpointermove = e => {
             panel.style.flexBasis =
             `${Math.min(300, Math.max(100, startWidth + (e.clientX - startX) * direction))}px`;
-            updateBrushPreview(currentBrush);
         };
 
         handle.onpointerup = () => {
@@ -733,6 +629,8 @@ document.querySelectorAll('.resize-handle').forEach(handle => {
 
 
 
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 
@@ -764,6 +662,8 @@ function showMePixels(imageData){
 }
 
 
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
+// ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
 
 

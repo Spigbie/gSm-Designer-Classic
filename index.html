@@ -35,7 +35,7 @@
                     <hr>
                     <div class="brushPreviewContainer">
                         <canvas id="brushPreviewCanvas" width="20" height="20"></canvas>
-                        <div class="hidden" id="saveBrushButton"><span>+</span></div>
+                        <div class="" id="saveBrushButton"><span>+</span></div>
                     </div>
                     <hr>
                     <div id="brushSettings">
@@ -45,20 +45,30 @@
                 </section>
 
                 <section class="window">
+                    <h2>Brushes</h2>
+                    <hr>
+                    <div id="brushContainer"></div>
+                    <div id="brushTipsContainer"></div>
+                </section>
+
+                <section class="window">
                     <h2>Color</h2>
                     <hr>
                     <div id="colorPreview"></div>
-                    <div class="window-group">
-                        <label>Red: <span id="redText">255</span></label>
-                        <input type="range" min="0" max="255" step="1" value="0" id="redRange">
-                    </div>
-                    <div class="window-group">
-                        <label>Green: <span id="greenText">0</span></label>
-                        <input type="range" min="0" max="255" step="1" value="0" id="greenRange">
-                    </div>
-                    <div class="window-group">
-                        <label>Blue: <span id="blueText">0</span></label>
-                        <input type="range" min="0" max="255" step="1" value="0" id="blueRange">
+
+                    <div id="colorSettings">
+                        <div class="window-group color-wrapper">
+                            <label>Red: <span class="range-text">0</span></label>
+                            <input type="range" min="0" max="255" step="1" value="0" data-color="r">
+                        </div>
+                        <div class="window-group color-wrapper">
+                            <label>Green: <span class="range-text">0</span></label>
+                            <input type="range" min="0" max="255" step="1" value="0" data-color="g">
+                        </div>
+                        <div class="window-group color-wrapper">
+                            <label>Blue: <span class="range-text">0</span></label>
+                            <input type="range" min="0" max="255" step="1" value="0" data-color="b">
+                        </div>
                     </div>
                    
                 </section>

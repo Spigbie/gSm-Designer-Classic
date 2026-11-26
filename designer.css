@@ -67,7 +67,7 @@
 
 
 /* Easel Backgrounds */
-    --easel-bg-fill-color: rgb(123, 123, 123);  
+    --easel-bg-fill-color: rgb(255, 255, 255);  
 
     --easel-bg-checker-color1: rgb(255, 255, 255);
     --easel-bg-checker-color2: rgb(240, 240, 240);
@@ -79,7 +79,7 @@
         var(--easel-bg-checker-size) 
         var(--easel-bg-checker-size);
 
-    --canvas-background: var(--easel-bg-checker);
+    --canvas-background: var(--easel-bg-fill-color);
 
 
     --border-radius-normal: 10px;
@@ -495,4 +495,18 @@ footer > p {
 
 #saveBrushButton > span{
     font-weight: bold;
+}
+
+#brushTipsContainer{
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    gap: var(--padding-thin);
+    justify-content: start;
+}
+
+#brushTipsContainer > canvas{
+    padding: var(--padding-thin);
+    border: 1px outset white;
+    box-sizing: content-box;
+    background-color: white;
 }
