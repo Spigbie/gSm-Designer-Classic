@@ -26,7 +26,6 @@ let recordMousePos = false;
 
 // tool Window
 const toolsContainerElement = document.querySelector("#toolsContainer");
-const drawButton = document.querySelector("#drawButton");
 const undoButton = document.querySelector("#undoButton");
 const redoButton = document.querySelector("#redoButton");
 
@@ -67,6 +66,8 @@ const baseCtx = baseCanvas.getContext("2d");
 const topCtx = topCanvas.getContext("2d");
 
 
+// Math
+const toPercent = (val) => Math.round(val * 100);
 
 
 // ✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿✿
@@ -330,12 +331,32 @@ class PaintBrush extends Brush {
 
 
 
+const brushSettings = {
+    size:       {default: 10,   min: 1,     max: 100,   step: 1,    unit: "px"  },
+    hardness:   {default: 0,    min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    spacing:    {default: 0.2,  min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    opacity:    {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
+    flow:       {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
+};
+
+
 const brushes = [
-    new PaintBrush({size: 10, hardness: 0, spacing: 0.2, opacity: 1, flow: 1}),
-    new PaintBrush({size: 10, hardness: 1, spacing: 0.2, opacity: 1, flow: 1}),
-    new Pencil({size: 10, shape: "round", spacing: 0, opacity: 1}),
-    new Pencil({size: 10, shape: "square", spacing: 0, opacity: 1}),
+    new PaintBrush({
+        size: brushSettings.size.default, 
+        hardness: brushSettings.hardness.default, 
+        spacing: brushSettings.spacing.default, 
+        opacity: brushSettings.opacity.default, 
+        flow: brushSettings.flow.default
+    }),
+        
+    new Pencil({
+        size: brushSettings.size.default, 
+        shape: "round", 
+        spacing: brushSettings.spacing.default, 
+        opacity: brushSettings.opacity.default
+    }),
 ];
+
 
 currentBrush = brushes[0];
 
@@ -377,20 +398,13 @@ redoButton.addEventListener("click", () => {
 });
 
 
-const toPercent = (val) => Math.round(val * 100);
 
-const brushSettings = {
-    size:       {default: 5,    min: 1,     max: 100,   step: 1,    unit: "px"  },
-    hardness:   {default: 1,    min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
-    spacing:    {default: 0.2,  min: 0,     max: 1,     step: 0.01, unit: "%",  format: toPercent},
-    opacity:    {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
-    flow:       {default: 1,    min: 0.01,  max: 1,     step: 0.01, unit: "%",  format: toPercent},
-}
 
 function renderBrushControls(container){
     for (const name in brushSettings){
 
         const setting = brushSettings[name];
+        if (!name in currentBrush) continue;
 
         const rangeWrapper = document.createElement("div");
         rangeWrapper.classList.add("window-group", "range-wrapper");
@@ -402,11 +416,12 @@ function renderBrushControls(container){
         rangeLabel.innerHTML = `${name}: <span class="range-text">${formatValue}</span>${setting.unit}`;
 
         const rangeInput = document.createElement("input");
+
         rangeInput.type = "range";
-        rangeInput.value = 0.5;
         rangeInput.min = setting.min;
         rangeInput.max = setting.max;
         rangeInput.step = setting.step;
+        rangeInput.value = setting.default;
         rangeInput.dataset.setting = name;
 
         rangeWrapper.append(rangeLabel, rangeInput);
@@ -499,7 +514,7 @@ function initiate(){
     renderBrushControls(brushSettingsContainer);
     updateBrushSettings();
     saveDrawingState();
-    loadBrushes(brushes);
+    // loadBrushes(brushes);
     updateColorPreview();
     updateBrushPreview(currentBrush);
     
