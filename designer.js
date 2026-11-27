@@ -231,7 +231,7 @@ function trimCtx(ctx, width, height){
         }
     }
 
-    if (!hasPixels) {
+    if (!hasPixel) {
         return { left: 0, top: 0, width: 0, height: 0 };
     }
 
